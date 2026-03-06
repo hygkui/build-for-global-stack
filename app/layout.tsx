@@ -3,6 +3,7 @@ import { Inter, Syne, JetBrains_Mono } from "next/font/google"
 import { NeonAuthUIProvider } from "@neondatabase/auth/react"
 import { authClient } from "@/lib/auth/client"
 import { Navbar } from "@/components/navbar"
+import "@neondatabase/auth/ui/tailwind.css"
 import "./globals.css"
 
 const inter = Inter({ subsets: ["latin"], variable: "--font-inter" })
