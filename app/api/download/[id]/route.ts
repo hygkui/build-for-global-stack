@@ -66,7 +66,7 @@ export async function GET(
 
   const zipped = zipSync(zipInput, { level: 6 })
 
-  return new NextResponse(zipped, {
+  return new NextResponse(Buffer.from(zipped), {
     status: 200,
     headers: {
       "Content-Type": "application/zip",
