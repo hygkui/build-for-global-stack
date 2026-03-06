@@ -1,8 +1,20 @@
-import { neon } from "@neondatabase/serverless"
+import { neon, type NeonQueryFunction } from "@neondatabase/serverless"
 
-const sql = neon(process.env.DATABASE_URL!)
+function createSql() {
+  if (!process.env.DATABASE_URL) {
+    throw new Error("DATABASE_URL is not set")
+  }
+  return neon(process.env.DATABASE_URL)
+}
 
-export { sql }
+let _sql: NeonQueryFunction<any, any> | undefined
+
+export function getSql(): NeonQueryFunction<any, any> {
+  if (!_sql) {
+    _sql = createSql()
+  }
+  return _sql
+}
 
 export interface Order {
   id: string
@@ -24,6 +36,7 @@ export interface Order {
 }
 
 export async function getOrdersByUserId(userId: string): Promise<Order[]> {
+  const sql = getSql()
   const rows = await sql`
     SELECT * FROM orders
     WHERE user_id = ${userId}
@@ -33,12 +46,13 @@ export async function getOrdersByUserId(userId: string): Promise<Order[]> {
 }
 
 export async function getOrderBySessionId(sessionId: string): Promise<Order | null> {
+  const sql = getSql()
   const rows = await sql`
     SELECT * FROM orders
     WHERE stripe_session_id = ${sessionId}
     LIMIT 1
   `
-  return (rows[0] as Order) ?? null
+  return (rows as unknown as Order[])[0] ?? null
 }
 
 export async function createOrder(data: {
@@ -49,6 +63,7 @@ export async function createOrder(data: {
   stripeSessionId: string
   techStack?: Record<string, string[]>
 }): Promise<Order> {
+  const sql = getSql()
   const rows = await sql`
     INSERT INTO orders (
       user_id, product_id, product_name, amount_cents,
@@ -64,7 +79,7 @@ export async function createOrder(data: {
     )
     RETURNING *
   `
-  return rows[0] as Order
+  return (rows as unknown as Order[])[0]
 }
 
 export async function updateOrderStatus(
@@ -72,6 +87,7 @@ export async function updateOrderStatus(
   status: Order["status"],
   extra?: { downloadUrl?: string; paymentIntentId?: string }
 ): Promise<void> {
+  const sql = getSql()
   await sql`
     UPDATE orders
     SET

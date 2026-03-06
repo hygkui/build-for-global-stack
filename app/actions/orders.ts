@@ -1,9 +1,7 @@
 'use server'
 
-import { neon } from '@neondatabase/serverless'
+import { getSql } from '@/lib/db'
 import { redirect } from 'next/navigation'
-
-const sql = neon(process.env.DATABASE_URL!)
 
 export async function submitRequirements(formData: FormData) {
   const orderId = formData.get('orderId') as string
@@ -19,7 +17,7 @@ export async function submitRequirements(formData: FormData) {
     throw new Error('缺少必填字段')
   }
 
-  await sql`
+  await getSql()`
     UPDATE orders
     SET
       requirements = ${JSON.stringify({

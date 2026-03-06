@@ -1,11 +1,9 @@
 "use server"
 
-import { stripe } from "@/lib/stripe"
+import { getStripe } from "@/lib/stripe"
 import { getProductById } from "@/lib/products"
-import { neon } from "@neondatabase/serverless"
+import { getSql } from "@/lib/db"
 import { auth } from "@/lib/auth/server"
-
-const sql = neon(process.env.DATABASE_URL!)
 
 export async function createCheckoutSession(
   productId: string,
@@ -21,7 +19,7 @@ export async function createCheckoutSession(
 
   const appUrl = process.env.NEXT_PUBLIC_APP_URL ?? "http://localhost:3000"
 
-  const checkoutSession = await stripe.checkout.sessions.create({
+  const checkoutSession = await getStripe().checkout.sessions.create({
     ui_mode: "embedded",
     return_url: `${appUrl}/checkout/return?session_id={CHECKOUT_SESSION_ID}`,
     line_items: [
@@ -46,7 +44,7 @@ export async function createCheckoutSession(
   })
 
   // 创建 pending 订单，用 stripe_session_id 关联
-  await sql`
+  await getSql()`
     INSERT INTO orders (user_id, product_id, product_name, amount_cents, status, stripe_session_id, tech_stack)
     VALUES (
       ${userId},

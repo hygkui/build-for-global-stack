@@ -1,11 +1,9 @@
 import { NextRequest, NextResponse } from "next/server"
-import { neon } from "@neondatabase/serverless"
 import { auth } from "@/lib/auth/server"
+import { getSql } from "@/lib/db"
 import { generateTemplateFiles, type TechStack } from "@/lib/template-generator"
 import { generateAgentsMd } from "@/lib/agents-md"
 import { zipSync, strToU8 } from "fflate"
-
-const sql = neon(process.env.DATABASE_URL!)
 
 export async function GET(
   _req: NextRequest,
@@ -20,7 +18,7 @@ export async function GET(
   }
 
   // 查询订单：必须属于当前用户、产品为 template-code、状态为 completed
-  const rows = await sql`
+  const orderRows = await (getSql()`
     SELECT id, product_id, status, tech_stack
     FROM orders
     WHERE id = ${id}
@@ -28,16 +26,16 @@ export async function GET(
       AND product_id = 'template-code'
       AND status = 'completed'
     LIMIT 1
-  `
+  ` as unknown as Promise<Record<string, any>[]>)
 
-  if (rows.length === 0) {
+  if (orderRows.length === 0) {
     return NextResponse.json(
       { error: "Order not found or not eligible for download" },
       { status: 404 }
     )
   }
 
-  const order = rows[0]
+  const order = orderRows[0]
 
   // 解析 tech_stack（数据库中存储为 JSON 字符串或对象）
   let techStack: TechStack = {}

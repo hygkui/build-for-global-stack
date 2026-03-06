@@ -1,7 +1,7 @@
 import { redirect } from 'next/navigation'
 import Link from 'next/link'
 import { CheckCircle, Download, MessageSquare, XCircle } from 'lucide-react'
-import { stripe } from '@/lib/stripe'
+import { getStripe } from '@/lib/stripe'
 import { Button } from '@/components/ui/button'
 import { neon } from '@neondatabase/serverless'
 
@@ -17,7 +17,7 @@ export default async function CheckoutReturnPage({ searchParams }: ReturnPagePro
   const { session_id } = await searchParams
   if (!session_id) redirect('/pricing')
 
-  const session = await stripe.checkout.sessions.retrieve(session_id)
+  const session = await getStripe().checkout.sessions.retrieve(session_id)
 
   if (session.status !== 'complete') {
     return (
