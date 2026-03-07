@@ -1,0 +1,77 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    /* 深色科技风主题 */
+    --background: 220 20% 6%;
+    --foreground: 210 40% 96%;
+
+    --card: 220 20% 9%;
+    --card-foreground: 210 40% 96%;
+
+    --popover: 220 20% 9%;
+    --popover-foreground: 210 40% 96%;
+
+    --primary: 142 76% 48%;
+    --primary-foreground: 220 20% 6%;
+
+    --secondary: 220 20% 14%;
+    --secondary-foreground: 210 40% 96%;
+
+    --muted: 215 20% 55%;
+    --muted-foreground: 215 20% 55%;
+
+    --muted-bg: 220 20% 14%;
+
+    --accent: 142 76% 48%;
+    --accent-foreground: 220 20% 6%;
+
+    --destructive: 0 84% 60%;
+    --destructive-foreground: 210 40% 98%;
+
+    --border: 220 20% 16%;
+    --input: 220 20% 14%;
+    --ring: 142 76% 48%;
+
+    --radius: 0.75rem;
+
+    /* 自定义品牌色 */
+    --brand-green: 142 76% 48%;
+    --brand-green-dim: 142 76% 38%;
+    --brand-surface: 220 20% 9%;
+    --brand-surface-hover: 220 20% 12%;
+    --brand-border: 220 20% 16%;
+    --brand-text-muted: 215 20% 55%;
+  }
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+
+  body {
+    @apply bg-background text-foreground font-sans antialiased;
+  }
+
+  h1, h2, h3, h4, h5, h6 {
+    @apply font-serif;
+  }
+}
+
+/* 渐变文字 */
+.gradient-text {
+  @apply bg-clip-text text-transparent;
+  background-image: linear-gradient(135deg, hsl(142, 76%, 58%) 0%, hsl(160, 70%, 50%) 100%);
+}
+
+/* 发光边框效果 */
+.glow-border {
+  box-shadow: 0 0 0 1px hsl(142, 76%, 48%, 0.3), 0 0 20px hsl(142, 76%, 48%, 0.1);
+}
+
+.glow-border:hover {
+  box-shadow: 0 0 0 1px hsl(142, 76%, 48%, 0.6), 0 0 30px hsl(142, 76%, 48%, 0.2);
+}
