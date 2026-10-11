@@ -41,12 +41,23 @@ export function generateAgentsMd(selected: SelectedStack): string {
   lines.push("## 通用编码规范")
   lines.push("")
   lines.push("- 语言：TypeScript，严格模式（`strict: true`），不允许 `any`")
-  lines.push("- 框架：Next.js App Router，优先使用 Server Components（RSC）")
+  if (selected["starter"] === "tanstarter") {
+    lines.push("- 脚手架：TanStarter（https://tanstarter.dev/），用 `npx tanstarter-cli@latest create` 初始化，在此基础上改，不要改回 Next.js")
+    lines.push("- 框架：TanStack Start（TypeScript），部署目标为 Cloudflare Workers")
+    lines.push("- 默认配套：Drizzle + Cloudflare D1、R2、KV、Better Auth、Stripe / Creem / Waffo、Resend、Tailwind CSS v4 + shadcn/ui")
+  } else {
+    lines.push("- 框架：Next.js App Router，优先使用 Server Components（RSC）")
+  }
   lines.push("- 样式：Tailwind CSS + shadcn/ui，禁止内联 style")
-  lines.push("- 数据获取：Server Components 直接 fetch / SWR 用于客户端状态同步，禁止 `useEffect` 内 fetch")
-  lines.push("- 表单 / 数据变更：使用 Server Actions，配合 `useActionState`")
-  lines.push("- 错误处理：所有 Server Action 和 API Route 必须有 try/catch，返回结构化错误")
-  lines.push("- 环境变量：敏感变量只在服务端使用，客户端变量使用 `NEXT_PUBLIC_` 前缀")
+  if (selected["starter"] === "tanstarter") {
+    lines.push("- 数据与变更：沿用 TanStarter 的 server function 与 Drizzle 查询，不要改成 Next.js Server Actions")
+    lines.push("- 环境变量：敏感变量只在 Worker 服务端使用，通过 wrangler 绑定 D1 / R2 / KV")
+  } else {
+    lines.push("- 数据获取：Server Components 直接 fetch / SWR 用于客户端状态同步，禁止 `useEffect` 内 fetch")
+    lines.push("- 表单 / 数据变更：使用 Server Actions，配合 `useActionState`")
+    lines.push("- 环境变量：敏感变量只在服务端使用，客户端变量使用 `NEXT_PUBLIC_` 前缀")
+  }
+  lines.push("- 错误处理：所有服务端入口必须有 try/catch，返回结构化错误")
   lines.push("")
 
   // ── i18n 规范 ──

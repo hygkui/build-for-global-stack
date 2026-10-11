@@ -16,10 +16,19 @@ interface CompatWarning {
 function getCompatWarnings(selected: SelectedStack): CompatWarning[] {
   const warnings: CompatWarning[] = []
   const deployId = selected["deployment"]
+  const starterId = selected["starter"]
   const cronId = selected["cron"]
   const wsId = selected["websocket"]
   const dbId = selected["database"]
   const dockerId = selected["docker"]
+
+  if (starterId === "tanstarter" && deployId && deployId !== "cloudflare") {
+    warnings.push({
+      type: "warn",
+      message: "TanStarter 默认部署在 Cloudflare Workers",
+      tip: "模板内置 D1、R2、KV 和 Workers 部署。若改用其他平台，需要自行替换这些绑定。",
+    })
+  }
 
   if (!deployId) return warnings
   const compat = DEPLOYMENT_COMPAT[deployId]

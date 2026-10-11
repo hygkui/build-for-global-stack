@@ -31,9 +31,16 @@ function generatePrompt(selected: SelectedStack): string {
     lines.push(`- **${category.name}**: ${option.name} — ${option.description}`)
   }
 
+  const useTanStarter = selected["starter"] === "tanstarter"
+
   lines.push("\n## 项目要求\n")
-  lines.push("1. 使用 TypeScript + Next.js App Router")
-  lines.push("2. 使用 Tailwind CSS + shadcn/ui 组件库")
+  if (useTanStarter) {
+    lines.push("1. 以 TanStarter（https://tanstarter.dev/）为起点，使用 `npx tanstarter-cli@latest create` 初始化，不要从零搭建 Next.js")
+    lines.push("2. 框架使用 TanStack Start（TypeScript），部署在 Cloudflare Workers；数据库 Drizzle + D1，存储 R2，缓存 KV，认证 Better Auth，支付 Stripe / Creem / Waffo，邮件 Resend，UI 使用 Tailwind CSS v4 + shadcn/ui")
+  } else {
+    lines.push("1. 使用 TypeScript + Next.js App Router")
+    lines.push("2. 使用 Tailwind CSS + shadcn/ui 组件库")
+  }
   lines.push("3. 实现完整的用户认证流程（注册 / 登录 / 退出）")
   lines.push("4. 包含完整的项目目录结构和配置文件")
   lines.push("5. 包含环境变量示例文件 (.env.example)")
@@ -163,8 +170,13 @@ function generatePrompt(selected: SelectedStack): string {
   }
 
   lines.push("\n## 最佳实践\n")
-  lines.push("- 使用服务器组件（RSC）减少客户端 JavaScript")
-  lines.push("- 使用 Server Actions 处理表单和数据突变")
+  if (useTanStarter) {
+    lines.push("- 在 TanStarter 现有目录和命名上扩展，保持 Cloudflare 绑定（D1 / R2 / KV）不变")
+    lines.push("- 表单和数据突变走 TanStack Start 的 server function，不要引入 Next.js Server Actions")
+  } else {
+    lines.push("- 使用服务器组件（RSC）减少客户端 JavaScript")
+    lines.push("- 使用 Server Actions 处理表单和数据突变")
+  }
   lines.push("- 实现正确的错误处理和 Loading 状态")
   lines.push("- 支持深色模式")
   lines.push("- SEO 优化（metadata、og:image）")

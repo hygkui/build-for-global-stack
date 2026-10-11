@@ -77,6 +77,22 @@ export const DEPLOYMENT_COMPAT: Record<
 }
 
 export const TECH_STACKS: TechCategory[] = [
+  // ── 0. 启动模板（可选，选中后以该脚手架为起点）────────────────────────
+  {
+    id: "starter",
+    name: "启动模板",
+    description: "可选。选中后以现成 SaaS 脚手架为起点，而不是从零搭 Next.js",
+    multiSelect: false,
+    options: [
+      {
+        id: "tanstarter",
+        name: "TanStarter",
+        description: "TanStack Start + Cloudflare Workers，含认证、支付、D1/R2/KV、邮件和后台",
+        docs: "https://tanstarter.dev/",
+      },
+    ],
+  },
+
   // ── 1. 部署平台（首位）────────────────────────────────────────────────
   {
     id: "deployment",
