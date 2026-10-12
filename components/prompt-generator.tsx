@@ -1,12 +1,10 @@
 "use client"
 
 import { useState, useEffect } from "react"
-import { Copy, Check, ArrowRight, Sparkles, Download, Users } from "lucide-react"
-import { Button } from "@/components/ui/button"
+import { Copy, Check, Sparkles } from "lucide-react"
 import { TECH_STACKS, DEPLOYMENT_COMPAT } from "@/lib/tech-stacks"
 import { type SelectedStack } from "@/components/tech-stack-selector"
 import { cn } from "@/lib/utils"
-import Link from "next/link"
 
 function generatePrompt(selected: SelectedStack): string {
   if (Object.keys(selected).length === 0) return ""
@@ -326,33 +324,6 @@ export function PromptGenerator({ selected }: PromptGeneratorProps) {
         <span className="text-foreground">Cursor</span> 或{" "}
         <span className="text-foreground">Claude</span> 中即可生成项目
       </p>
-
-      {/* 升级引导 */}
-      <div className="rounded-xl border border-border bg-card p-4">
-        <p className="mb-3 text-sm font-semibold text-foreground">想要直接获得可运行的代码？</p>
-        <div className="flex flex-col gap-2 sm:flex-row">
-          <Link href="/pricing" className="flex-1">
-            <div className="group flex cursor-pointer items-center gap-3 rounded-lg border border-primary/30 bg-primary/10 p-3 transition-all hover:border-primary/60 hover:bg-primary/20">
-              <Download className="h-4 w-4 shrink-0 text-primary" />
-              <div className="min-w-0">
-                <p className="text-xs font-semibold text-foreground">$20 · 下载完整代码包</p>
-                <p className="text-xs text-muted-foreground">完整可运行项目，一键部署</p>
-              </div>
-              <ArrowRight className="ml-auto h-3.5 w-3.5 shrink-0 text-primary opacity-0 transition-opacity group-hover:opacity-100" />
-            </div>
-          </Link>
-          <Link href="/pricing" className="flex-1">
-            <div className="group flex cursor-pointer items-center gap-3 rounded-lg border border-border bg-secondary/30 p-3 transition-all hover:border-border/80 hover:bg-secondary/60">
-              <Users className="h-4 w-4 shrink-0 text-muted-foreground" />
-              <div className="min-w-0">
-                <p className="text-xs font-semibold text-foreground">$200 · MVP 外包开发</p>
-                <p className="text-xs text-muted-foreground">专业团队 1 对 1 交付</p>
-              </div>
-              <ArrowRight className="ml-auto h-3.5 w-3.5 shrink-0 text-muted-foreground opacity-0 transition-opacity group-hover:opacity-100" />
-            </div>
-          </Link>
-        </div>
-      </div>
     </div>
   )
 }

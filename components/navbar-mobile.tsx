@@ -38,22 +38,6 @@ export function NavbarMobile({ isLoggedIn }: NavbarMobileProps) {
           >
             按目标推荐
           </Link>
-          <Link
-            href="/pricing"
-            className="text-sm text-muted transition-colors hover:text-foreground"
-            onClick={() => setOpen(false)}
-          >
-            价格
-          </Link>
-          {isLoggedIn && (
-            <Link
-              href="/dashboard/orders"
-              className="text-sm text-muted transition-colors hover:text-foreground"
-              onClick={() => setOpen(false)}
-            >
-              我的订单
-            </Link>
-          )}
           {!isLoggedIn && (
             <div className="flex flex-col gap-2 pt-2">
               <Link href="/auth/sign-in" onClick={() => setOpen(false)}>

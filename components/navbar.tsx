@@ -35,20 +35,6 @@ export async function Navbar() {
           >
             按目标推荐
           </Link>
-          <Link
-            href="/pricing"
-            className="text-sm text-muted transition-colors hover:text-foreground"
-          >
-            价格
-          </Link>
-          {isLoggedIn && (
-            <Link
-              href="/dashboard/orders"
-              className="text-sm text-muted transition-colors hover:text-foreground"
-            >
-              我的订单
-            </Link>
-          )}
         </nav>
 
         {/* Desktop Auth */}

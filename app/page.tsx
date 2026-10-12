@@ -58,11 +58,6 @@ export default function HomePage() {
                 <ArrowRight className="h-4 w-4" />
               </Button>
             </Link>
-            <Link href="/pricing">
-              <Button size="lg" variant="outline" className="gap-2">
-                查看定价
-              </Button>
-            </Link>
           </div>
 
           {/* Stats */}
@@ -151,18 +146,13 @@ export default function HomePage() {
               准备好出海了吗？
             </h2>
             <p className="mx-auto mt-4 max-w-md text-muted">
-              免费注册，立即开始生成你的技术栈提示词，或购买代码包直接启动项目。
+              选一个目标，复制提示词，就可以开工。
             </p>
             <div className="mt-8 flex flex-col items-center gap-3 sm:flex-row sm:justify-center">
-              <Link href="/auth/sign-up">
+              <Link href="#generator">
                 <Button size="lg" className="gap-2">
-                  免费注册
+                  按目标看看推荐
                   <ArrowRight className="h-4 w-4" />
-                </Button>
-              </Link>
-              <Link href="/pricing">
-                <Button size="lg" variant="outline">
-                  查看付费方案
                 </Button>
               </Link>
             </div>
@@ -176,14 +166,6 @@ export default function HomePage() {
           <p className="text-sm text-muted">
             © 2025 出海黄金组合. 保留所有权利。
           </p>
-          <div className="flex gap-4">
-            <Link href="/pricing" className="text-sm text-muted hover:text-foreground">
-              定价
-            </Link>
-            <Link href="/dashboard" className="text-sm text-muted hover:text-foreground">
-              我的订单
-            </Link>
-          </div>
         </div>
       </footer>
     </div>

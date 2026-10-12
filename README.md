@@ -101,7 +101,7 @@ Docker 方案适合希望将所有服务（应用、数据库、缓存、文件�
 - **仅 Dockerfile**：适合手动 `docker run` 或接入 CI/CD 流水线
 - **Docker Compose 一站式**：`app + db + cache + storage` 全部打包，`docker compose up -d` 一键启动
 
-**注意**：Docker 自托管属于复杂度较高的定制需求，工具内选择此选项后会自动引导至 **$200 MVP 外包服务**，由团队人工交付完整的基础设施配置、安全加固和部署文档。
+需要 VPS 时，推荐用 DigitalOcean Droplet 跑 Docker，而不是默认上大型云。
 
 ## i18n
 

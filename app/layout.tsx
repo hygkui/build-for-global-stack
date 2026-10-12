@@ -12,8 +12,8 @@ const jetbrainsMono = JetBrains_Mono({ subsets: ["latin"], variable: "--font-jet
 export const metadata: Metadata = {
   title: "出海黄金组合 - 快速构建出海 MVP",
   description:
-    "为出海开发者提供技术栈选择、提示词生成、代码模板和 MVP 外包服务。免费获取提示词，$20 下载可运行代码，$200 完整 MVP 交付。",
-  keywords: ["出海", "SaaS", "技术栈", "MVP", "代码模板", "Neon", "Stripe", "Vercel"],
+    "按目标推荐出海技术栈，生成可以直接交给 AI 编程工具的提示词。",
+  keywords: ["出海", "SaaS", "技术栈", "MVP", "Vercel", "Cloudflare"],
   openGraph: {
     title: "出海黄金组合",
     description: "快速构建面向全球市场的 MVP 产品",
@@ -35,7 +35,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
       >
         <NeonAuthUIProvider
           authClient={authClient}
-          redirectTo="/dashboard/orders"
+          redirectTo="/"
           emailOTP
           credentials={{ forgotPassword: true }}
         >
