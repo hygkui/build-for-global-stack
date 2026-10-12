@@ -3,11 +3,9 @@ import Link from 'next/link'
 import { CheckCircle, Download, MessageSquare, XCircle } from 'lucide-react'
 import { getStripe } from '@/lib/stripe'
 import { Button } from '@/components/ui/button'
-import { neon } from '@neondatabase/serverless'
+import { getSql } from '@/lib/db'
 
 export const dynamic = 'force-dynamic'
-
-const sql = neon(process.env.DATABASE_URL!)
 
 interface ReturnPageProps {
   searchParams: Promise<{ session_id?: string }>
@@ -40,12 +38,12 @@ export default async function CheckoutReturnPage({ searchParams }: ReturnPagePro
   // 从数据库查找订单 ID（用于 MVP 需求填写链接）
   let orderId: string | null = null
   if (!isTemplate) {
-    const [row] = await sql`
+    const rows = await (getSql()`
       SELECT id FROM orders
       WHERE stripe_session_id = ${session_id}
       LIMIT 1
-    `
-    orderId = row?.id ?? null
+    ` as unknown as Promise<Record<string, any>[]>)
+    orderId = rows[0]?.id ?? null
   }
 
   return (

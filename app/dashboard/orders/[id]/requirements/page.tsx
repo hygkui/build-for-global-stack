@@ -1,11 +1,9 @@
-import { neon } from "@neondatabase/serverless"
 import { notFound, redirect } from "next/navigation"
 import { auth } from "@/lib/auth/server"
+import { getSql } from "@/lib/db"
 import RequirementsForm from "@/components/requirements-form"
 
 export const dynamic = "force-dynamic"
-
-const sql = neon(process.env.DATABASE_URL!)
 
 export const metadata = {
   title: "填写项目需求 - 出海黄金组合",
@@ -21,11 +19,12 @@ export default async function RequirementsPage({ params }: Props) {
   const { data: session } = await auth.getSession()
   if (!session?.user) redirect("/auth/sign-in")
 
-  const [order] = await sql`
+  const rows = await (getSql()`
     SELECT id, product_id, product_name, status
     FROM orders
     WHERE id = ${id} AND user_id = ${session.user.id}
-  `
+  ` as unknown as Promise<Record<string, any>[]>)
+  const order = rows[0]
 
   if (!order || order.product_id !== "mvp-service") notFound()
 

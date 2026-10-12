@@ -1,14 +1,11 @@
-import { neon } from "@neondatabase/serverless"
 import { redirect } from "next/navigation"
 import Link from "next/link"
 import { Package, FileDown, MessageSquare, Clock } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { auth } from "@/lib/auth/server"
-import type { Order } from "@/lib/db"
+import { getSql, type Order } from "@/lib/db"
 
 export const dynamic = "force-dynamic"
-
-const sql = neon(process.env.DATABASE_URL!)
 
 export const metadata = {
   title: "我的订单 - 出海黄金组合",
@@ -18,12 +15,12 @@ export default async function OrdersPage() {
   const { data: session } = await auth.getSession()
   if (!session?.user) redirect("/auth/sign-in")
 
-  const orders = await sql`
+  const orders = await (getSql()`
     SELECT id, product_id, product_name, amount_cents, status, tech_stack, requirements, created_at
     FROM orders
     WHERE user_id = ${session.user.id}
     ORDER BY created_at DESC
-  `
+  ` as unknown as Promise<Record<string, any>[]>)
 
   return (
     <main className="min-h-screen bg-background pt-24 pb-20">
