@@ -32,11 +32,21 @@ function generatePrompt(selected: SelectedStack): string {
   }
 
   const useTanStarter = selected["starter"] === "tanstarter"
+  const useMonorepo = selected["starter"] === "fullstack-monorepo"
+  const useVoid = selected["deployment"] === "void"
 
   lines.push("\n## 项目要求\n")
   if (useTanStarter) {
     lines.push("1. 以 TanStarter（https://tanstarter.dev/）为起点，使用 `npx tanstarter-cli@latest create` 初始化，不要从零搭建 Next.js")
     lines.push("2. 框架使用 TanStack Start（TypeScript），部署在 Cloudflare Workers；数据库 Drizzle + D1，存储 R2，缓存 KV，认证 Better Auth，支付 Stripe / Creem / Waffo，邮件 Resend，UI 使用 Tailwind CSS v4 + shadcn/ui")
+  } else if (useMonorepo) {
+    lines.push("1. 初始化 pnpm workspace + Turborepo，目录为 apps/web（Next.js + Tailwind + shadcn/ui）、apps/admin（Vite + React + Arco Design）、apps/mobile（Expo + React Native）、apps/server（NestJS）、shared-types")
+    lines.push("2. 后端使用 NestJS + Drizzle + Better Auth（nestjs-better-auth）+ @nestjs/schedule + @nestjs/websockets。支付用代收，不要在没有海外公司时接 Stripe。前端状态用 TanStack Query 管服务端数据，Zustand 管客户端状态")
+    lines.push("3. 国际化：前端 react-i18next，后端 nestjs-i18n。端口：server=3000，web=3001，admin=3002，mobile=8081")
+    lines.push("4. 用户站可以部署在 Vercel。NestJS 需要长时进程，放在 Railway 或 DigitalOcean，不要默认改成阿里云、AWS 或 Azure")
+  } else if (useVoid) {
+    lines.push("1. 使用 Vite 全栈应用（React、Vue、Svelte 或 Solid），不要改成 Next.js")
+    lines.push("2. 接入 Void（https://void.cloud/），用 `void deploy` 部署到 Cloudflare Workers。D1、KV、R2、队列和 Cron 按代码引用开通")
   } else {
     lines.push("1. 使用 TypeScript + Next.js App Router")
     lines.push("2. 使用 Tailwind CSS + shadcn/ui 组件库")
@@ -44,10 +54,34 @@ function generatePrompt(selected: SelectedStack): string {
   lines.push("3. 实现完整的用户认证流程（注册 / 登录 / 退出）")
   lines.push("4. 包含完整的项目目录结构和配置文件")
   lines.push("5. 包含环境变量示例文件 (.env.example)")
+  if (useVoid) {
+    lines.push("6. Void 仍在内测，尚未完全开放。没有访问权限时不要假设已经能部署")
+  }
 
-  if (deployId) {
+  if (deployId && !useVoid) {
     const dep = TECH_STACKS.find((c) => c.id === "deployment")?.options.find((o) => o.id === deployId)
     if (dep) lines.push(`6. 包含 ${dep.name} 的部署配置文件`)
+  }
+
+  const paymentId = selected["payment"]
+  if (paymentId === "creem" || paymentId === "waffo" || paymentId === "stripe" || paymentId === "polar" || paymentId === "lemonsqueezy") {
+    lines.push("\n## 收款\n")
+    lines.push("中国大陆个人或公司开不了 Stripe。卖到海外还要处理增值税，钱要能打回可用账户。")
+    if (paymentId === "creem") {
+      lines.push("使用 **Creem** 作为 Merchant of Record：由对方作为法律卖方收款、计算并缴纳增值税，再把净额打给卖家。")
+      lines.push("- 接入 Creem Checkout 和 webhook，在 webhook 里开通用户权限")
+      lines.push("- 开通前核对 Creem 当前支持的打款方式，不要假设一定能打到某一类账户")
+    } else if (paymentId === "waffo") {
+      lines.push("使用 **Waffo** 作为 Merchant of Record。其文档写明可打到中国大陆银行卡或支付宝，买家用国际卡付款。")
+      lines.push("- 接入 Waffo 结账和 webhook，在 webhook 里开通用户权限")
+    } else if (paymentId === "stripe") {
+      lines.push("使用 **Stripe**。仅在已有香港、美国或新加坡等受支持地区的公司时使用。")
+      lines.push("- 不要为了验证一个点子先去注册海外公司")
+    } else if (paymentId === "polar") {
+      lines.push("Polar 的打款走 Stripe。没有 Stripe 可用地区的主体时不要选它，钱打不回来。")
+    } else if (paymentId === "lemonsqueezy") {
+      lines.push("Lemon Squeezy 不支持打到中国大陆，并且在并入不接收中国大陆卖家的 Stripe 方案。不要把它当作出海收款方案。")
+    }
   }
 
   // Cron 配置说明
@@ -70,9 +104,14 @@ function generatePrompt(selected: SelectedStack): string {
         lines.push("- 创建 Supabase Edge Function 处理定时逻辑")
         lines.push("- 使用 `cron.schedule()` 在数据库层触发 Edge Function")
       } else if (cronId === "node-cron") {
-        lines.push("- 在 `lib/cron.ts` 中使用 `node-cron` 或 `bull` 注册定时任务")
-        lines.push("- 在应用启动时初始化 cron 调度器")
-        lines.push("- 注意：仅适用于长时运行服务（Railway / Docker / VPS）")
+        if (useMonorepo) {
+          lines.push("- 在 `apps/server` 使用 `@nestjs/schedule`，用 Cron 装饰器注册定时任务")
+          lines.push("- 不要再写一套 Next.js `app/api/cron`")
+        } else {
+          lines.push("- 在 `lib/cron.ts` 中使用 `node-cron` 或 `bull` 注册定时任务")
+          lines.push("- 在应用启动时初始化 cron 调度器")
+          lines.push("- 注意：仅适用于长时运行服务（Railway / DigitalOcean）")
+        }
       }
     }
   } else if (cronId === "native-cron" && deployId) {
@@ -120,9 +159,14 @@ function generatePrompt(selected: SelectedStack): string {
         lines.push("- 在 `wrangler.toml` 中声明 Durable Object 绑定")
         lines.push("- 使用 Hibernation WebSocket API 降低空闲成本")
       } else if (wsId === "native-ws") {
-        lines.push("- 使用 `ws` 或 `Socket.io` 库创建 WebSocket 服务器")
-        lines.push("- 在 `server.ts` 中自定义 Next.js HTTP server 并挂载 WS")
-        lines.push("- 注意：仅适用于长时运行服务（Railway / Docker / VPS）")
+        if (useMonorepo) {
+          lines.push("- 在 `apps/server` 使用 `@nestjs/websockets` 建 Gateway")
+          lines.push("- 不要把 WebSocket 挂到 Next.js 自定义 server 上")
+        } else {
+          lines.push("- 使用 `ws` 或 `Socket.io` 库创建 WebSocket 服务器")
+          lines.push("- 在 `server.ts` 中自定义 Next.js HTTP server 并挂载 WS")
+          lines.push("- 注意：仅适用于长时运行服务（Railway / DigitalOcean）")
+        }
       }
     }
   }
@@ -157,12 +201,28 @@ function generatePrompt(selected: SelectedStack): string {
 
   lines.push("\n## 项目结构\n")
   lines.push("请生成以下内容：")
-  lines.push("- `package.json` 包含所有必要依赖")
-  lines.push("- `app/` 目录下的基础页面（首页、登录、注册、仪表盘）")
-  lines.push("- `lib/` 目录下的数据库连接和工具函数")
-  lines.push("- `components/` 目录下的共享组件")
-  lines.push("- `.env.example` 环境变量示例")
-  lines.push("- `README.md` 包含快速启动说明")
+  if (useMonorepo) {
+    lines.push("- 根目录 `pnpm-workspace.yaml`、`turbo.json`、`package.json`")
+    lines.push("- `apps/server`：NestJS 模块、Drizzle schema、Better Auth、Stripe webhook、Cron、WebSocket")
+    lines.push("- `apps/web`：Next.js 用户站（首页、登录、注册）")
+    lines.push("- `apps/admin`：Arco Design 登录与表格页")
+    lines.push("- `apps/mobile`：Expo 首页")
+    lines.push("- `shared-types`：User、Order 等共享类型")
+    lines.push("- 各应用的环境变量示例，不要提交真实密钥")
+    lines.push("- `README.md` 写明安装、数据库迁移和四个端口")
+  } else if (useVoid) {
+    lines.push("- Vite 项目：`vite.config.ts`、页面、服务端路由、`void.json`")
+    lines.push("- 用 Void 插件接入数据库、KV 和对象存储，不要手写一套 Workers 绑定")
+    lines.push("- 环境变量示例，不要提交真实密钥")
+    lines.push("- `README.md` 写明如何申请内测，以及 `void deploy` 的步骤")
+  } else {
+    lines.push("- `package.json` 包含所有必要依赖")
+    lines.push("- `app/` 目录下的基础页面（首页、登录、注册、仪表盘）")
+    lines.push("- `lib/` 目录下的数据库连接和工具函数")
+    lines.push("- `components/` 目录下的共享组件")
+    lines.push("- `.env.example` 环境变量示例")
+    lines.push("- `README.md` 包含快速启动说明")
+  }
   if (dockerId && dockerId !== "no-docker") {
     lines.push("- `Dockerfile` multi-stage 生产镜像")
     if (dockerId === "docker-compose") lines.push("- `docker-compose.yml` 完整服务编排")
@@ -173,6 +233,13 @@ function generatePrompt(selected: SelectedStack): string {
   if (useTanStarter) {
     lines.push("- 在 TanStarter 现有目录和命名上扩展，保持 Cloudflare 绑定（D1 / R2 / KV）不变")
     lines.push("- 表单和数据突变走 TanStack Start 的 server function，不要引入 Next.js Server Actions")
+  } else if (useMonorepo) {
+    lines.push("- 共享类型只放在 shared-types。业务 Hooks 可以跨 web / admin / mobile 复用，UI 不要硬套同一套组件")
+    lines.push("- ORM 优先 Drizzle。定时任务用 @nestjs/schedule，实时通信用 @nestjs/websockets，不要再套一层 Next.js Server Actions")
+    lines.push("- 这套结构给中大型和多端。如果只是小型 MVP，停下来改用单个 Next.js 应用")
+  } else if (useVoid) {
+    lines.push("- 保持 Vite 项目结构，部署只走 `void deploy`")
+    lines.push("- 资源用 Void 的导入方式声明，不要让用户先去 Cloudflare 控制台手工建 D1 / R2 / KV")
   } else {
     lines.push("- 使用服务器组件（RSC）减少客户端 JavaScript")
     lines.push("- 使用 Server Actions 处理表单和数据突变")
@@ -212,8 +279,8 @@ export function PromptGenerator({ selected }: PromptGeneratorProps) {
     return (
       <div className="flex min-h-[300px] flex-col items-center justify-center rounded-xl border border-dashed border-border bg-card/50 p-8 text-center">
         <Sparkles className="mb-3 h-10 w-10 text-muted-foreground/40" />
-        <p className="text-sm font-medium text-muted-foreground">在左侧选择你的技术栈</p>
-        <p className="mt-1 text-xs text-muted-foreground/70">选择后自动生成项目初始化提示词</p>
+        <p className="text-sm font-medium text-muted-foreground">先选一个目标</p>
+        <p className="mt-1 text-xs text-muted-foreground/70">选中后按推荐组合生成提示词</p>
       </div>
     )
   }

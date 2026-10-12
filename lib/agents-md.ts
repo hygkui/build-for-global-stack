@@ -45,13 +45,30 @@ export function generateAgentsMd(selected: SelectedStack): string {
     lines.push("- 脚手架：TanStarter（https://tanstarter.dev/），用 `npx tanstarter-cli@latest create` 初始化，在此基础上改，不要改回 Next.js")
     lines.push("- 框架：TanStack Start（TypeScript），部署目标为 Cloudflare Workers")
     lines.push("- 默认配套：Drizzle + Cloudflare D1、R2、KV、Better Auth、Stripe / Creem / Waffo、Resend、Tailwind CSS v4 + shadcn/ui")
+  } else if (selected["starter"] === "fullstack-monorepo") {
+    lines.push("- 仓库：pnpm workspace + Turborepo。apps/web（Next.js + Tailwind + shadcn/ui）、apps/admin（Vite + Arco Design）、apps/mobile（Expo + React Native）、apps/server（NestJS）、shared-types")
+    lines.push("- 后端：NestJS + Drizzle + Better Auth + @nestjs/schedule + @nestjs/websockets。收款走代收，没有受支持地区的公司就不要接 Stripe。状态：TanStack Query + Zustand")
+    lines.push("- 国际化：前端 react-i18next，后端 nestjs-i18n。端口 server=3000，web=3001，admin=3002，mobile=8081")
+    lines.push("- 部署：用户站可以放 Vercel。NestJS 用 Railway 或 DigitalOcean。不要改成阿里云、AWS 或 Azure，除非用户明确要求")
+    lines.push("- 范围：这套给中大型和多端。小型 MVP 不要用这套脚手架")
+  } else if (selected["deployment"] === "void") {
+    lines.push("- 框架：Vite 全栈（React、Vue、Svelte 或 Solid），不要改成 Next.js")
+    lines.push("- 部署：Void（https://void.cloud/），命令 `void deploy`，跑在 Cloudflare Workers 上")
+    lines.push("- 数据：D1、KV、R2、队列和 Cron 按代码引用由 Void 开通")
+    lines.push("- 状态：Void 仍在内测，尚未完全开放。没有访问权限时不要生成已经上线的部署步骤")
   } else {
     lines.push("- 框架：Next.js App Router，优先使用 Server Components（RSC）")
   }
-  lines.push("- 样式：Tailwind CSS + shadcn/ui，禁止内联 style")
+  lines.push("- 样式：Tailwind CSS + shadcn/ui，禁止内联 style。若使用 Arco 管理端，管理端沿用 Arco 组件")
   if (selected["starter"] === "tanstarter") {
     lines.push("- 数据与变更：沿用 TanStarter 的 server function 与 Drizzle 查询，不要改成 Next.js Server Actions")
     lines.push("- 环境变量：敏感变量只在 Worker 服务端使用，通过 wrangler 绑定 D1 / R2 / KV")
+  } else if (selected["starter"] === "fullstack-monorepo") {
+    lines.push("- 数据与变更：NestJS service + Drizzle。前端用 TanStack Query 请求 API，不要在用户站里堆 Server Actions 来代替后端")
+    lines.push("- 环境变量：密钥只放在 apps/server。前端只用公开变量")
+  } else if (selected["deployment"] === "void") {
+    lines.push("- 数据与变更：走 Vite 的服务端路由和 Void 提供的数据库，不要引入 Next.js Server Actions")
+    lines.push("- 环境变量：密钥只在服务端使用。部署用 `void deploy`，不要改成 wrangler 手工绑定")
   } else {
     lines.push("- 数据获取：Server Components 直接 fetch / SWR 用于客户端状态同步，禁止 `useEffect` 内 fetch")
     lines.push("- 表单 / 数据变更：使用 Server Actions，配合 `useActionState`")

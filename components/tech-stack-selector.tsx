@@ -22,6 +22,14 @@ function getCompatWarnings(selected: SelectedStack): CompatWarning[] {
   const dbId = selected["database"]
   const dockerId = selected["docker"]
 
+  if (dbId === "d1" && deployId && deployId !== "cloudflare" && deployId !== "void") {
+    warnings.push({
+      type: "warn",
+      message: "Cloudflare D1 需要部署在 Cloudflare Workers",
+      tip: "换到 Cloudflare，或改用 Neon / PostgreSQL。",
+    })
+  }
+
   if (starterId === "tanstarter" && deployId && deployId !== "cloudflare") {
     warnings.push({
       type: "warn",
@@ -62,10 +70,10 @@ function getCompatWarnings(selected: SelectedStack): CompatWarning[] {
       tip: "请选择 Supabase 作为数据库，或改用 QStash / GitHub Actions。",
     })
   }
-  if (cronId === "native-cron" && deployId === "docker") {
+  if (cronId === "native-cron" && deployId === "digitalocean") {
     warnings.push({
       type: "warn",
-      message: "自托管 / VPS 无「平台原生 Cron」，建议改用 node-cron / BullMQ 或 crontab",
+      message: "DigitalOcean Droplet 无「平台原生 Cron」，建议改用 node-cron / BullMQ 或 crontab",
       tip: "或选择 Upstash QStash 通过 HTTP 触发，更易管理和重试。",
     })
   }
@@ -132,7 +140,7 @@ function OptionButton({ option, isSelected, onSelect, deployId, dbId }: {
     <button
       onClick={onSelect}
       className={cn(
-        "relative flex flex-col items-start rounded-lg border p-3 text-left transition-all duration-200",
+        "relative flex min-h-11 cursor-pointer flex-col items-start rounded-lg border p-3 text-left transition-colors duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring",
         isSelected
           ? "border-primary bg-primary/10 text-foreground shadow-md shadow-primary/10"
           : "border-border bg-secondary/30 text-muted hover:border-border/80 hover:bg-secondary/60 hover:text-foreground"
@@ -154,7 +162,8 @@ function CategoryCard({ category, selected, selectedStack, onSelect }: {
   category: TechCategory; selected: string | undefined; selectedStack: SelectedStack
   onSelect: (categoryId: string, optionId: string) => void
 }) {
-  const [expanded, setExpanded] = useState(true)
+  const [expanded, setExpanded] = useState(false)
+  const [showEnterprise, setShowEnterprise] = useState(false)
   const deployId = selectedStack["deployment"]
   const dbId = selectedStack["database"]
   const compat = deployId ? DEPLOYMENT_COMPAT[deployId] : undefined
@@ -229,18 +238,63 @@ function CategoryCard({ category, selected, selectedStack, onSelect }: {
             </div>
           )}
 
-          <div className="grid grid-cols-2 gap-2 sm:grid-cols-3">
-            {category.options.map((option) => (
-              <OptionButton
-                key={option.id}
-                option={option}
-                isSelected={selected === option.id}
-                onSelect={() => onSelect(category.id, option.id)}
+          {category.id === "deployment" ? (
+            <div className="space-y-4">
+              <OptionGroup
+                label="推荐"
+                options={category.options.filter((o) => o.tier === "recommended")}
+                selected={selected}
+                onSelect={onSelect}
+                categoryId={category.id}
                 deployId={deployId}
                 dbId={dbId}
               />
-            ))}
-          </div>
+              <OptionGroup
+                label="其他运行方式"
+                options={category.options.filter((o) => o.tier === "flexible")}
+                selected={selected}
+                onSelect={onSelect}
+                categoryId={category.id}
+                deployId={deployId}
+                dbId={dbId}
+              />
+              <div>
+                <button
+                  type="button"
+                  onClick={() => setShowEnterprise((v) => !v)}
+                  className="cursor-pointer text-xs text-muted underline-offset-2 hover:text-foreground hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                >
+                  {showEnterprise ? "收起大型云" : "已有阿里云 / AWS / Azure 账号"}
+                </button>
+                {showEnterprise && (
+                  <div className="mt-2">
+                    <OptionGroup
+                      label="大型云"
+                      options={category.options.filter((o) => o.tier === "enterprise")}
+                      selected={selected}
+                      onSelect={onSelect}
+                      categoryId={category.id}
+                      deployId={deployId}
+                      dbId={dbId}
+                    />
+                  </div>
+                )}
+              </div>
+            </div>
+          ) : (
+            <div className="grid grid-cols-2 gap-2 sm:grid-cols-3">
+              {category.options.map((option) => (
+                <OptionButton
+                  key={option.id}
+                  option={option}
+                  isSelected={selected === option.id}
+                  onSelect={() => onSelect(category.id, option.id)}
+                  deployId={deployId}
+                  dbId={dbId}
+                />
+              ))}
+            </div>
+          )}
         </div>
       )}
     </div>
@@ -270,23 +324,50 @@ function CompatWarningBanner({ selected }: { selected: SelectedStack }) {
   )
 }
 
-export function TechStackSelector({ onChange }: { onChange: (selected: SelectedStack) => void }) {
-  const [selected, setSelected] = useState<SelectedStack>({})
+function OptionGroup({ label, options, selected, onSelect, categoryId, deployId, dbId }: {
+  label: string
+  options: TechOption[]
+  selected?: string
+  onSelect: (categoryId: string, optionId: string) => void
+  categoryId: string
+  deployId?: string
+  dbId?: string
+}) {
+  if (options.length === 0) return null
+  return (
+    <div>
+      <p className="mb-2 text-xs font-medium text-muted">{label}</p>
+      <div className="grid grid-cols-2 gap-2 sm:grid-cols-3">
+        {options.map((option) => (
+          <OptionButton
+            key={option.id}
+            option={option}
+            isSelected={selected === option.id}
+            onSelect={() => onSelect(categoryId, option.id)}
+            deployId={deployId}
+            dbId={dbId}
+          />
+        ))}
+      </div>
+    </div>
+  )
+}
 
+export function TechStackSelector({ selected, onChange }: {
+  selected: SelectedStack
+  onChange: (selected: SelectedStack) => void
+}) {
   const handleSelect = useCallback(
     (categoryId: string, optionId: string) => {
-      setSelected((prev) => {
-        const next = { ...prev }
-        if (next[categoryId] === optionId) {
-          delete next[categoryId]
-        } else {
-          next[categoryId] = optionId
-        }
-        onChange(next)
-        return next
-      })
+      const next = { ...selected }
+      if (next[categoryId] === optionId) {
+        delete next[categoryId]
+      } else {
+        next[categoryId] = optionId
+      }
+      onChange(next)
     },
-    [onChange]
+    [onChange, selected]
   )
 
   const selectedCount = Object.keys(selected).length
@@ -299,7 +380,7 @@ export function TechStackSelector({ onChange }: { onChange: (selected: SelectedS
         </p>
         {selectedCount > 0 && (
           <button
-            onClick={() => { setSelected({}); onChange({}) }}
+            onClick={() => onChange({})}
             className="text-xs text-muted underline-offset-2 hover:text-foreground hover:underline"
           >
             清空选择

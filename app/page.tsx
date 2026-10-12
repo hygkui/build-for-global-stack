@@ -7,27 +7,27 @@ import { GeneratorSection } from "@/components/generator-section"
 const STEPS = [
   {
     step: "01",
-    title: "选择技术栈",
-    description: "从 8 大类别中选择你的出海技术组合，支持 Vercel、Neon、Stripe 等主流方案",
+    title: "说出目标",
+    description: "尽快上线，还是把成本压在 Cloudflare。不用先从平台清单里挑。",
   },
   {
     step: "02",
-    title: "获取提示词（免费）",
-    description: "自动生成项目初始化提示词，复制到 v0.dev 或 Cursor 中即可创建项目",
+    title: "拿走推荐组合",
+    description: "Vercel 或 Cloudflare 的配套已经配好，复制提示词就能交给 Cursor。",
   },
   {
     step: "03",
-    title: "下载代码 / 定制开发",
-    description: "$20 获取可直接运行的代码包，或花 $200 让我们帮你完成整个 MVP",
+    title: "需要时再微调",
+    description: "阿里云、AWS、Azure 留给已经在用的团队，不作为默认起点。",
   },
 ]
 
 const FEATURES = [
-  "8 大技术类别，30+ 精选工具",
+  "按目标推荐，而不是先丢一张长清单",
+  "默认只推 Vercel 和 Cloudflare",
   "自动生成可用于 AI 工具的提示词",
-  "$20 获取完整可运行代码包",
-  "$200 MVP 1 对 1 外包开发",
-  "覆盖部署、数据库、支付、认证全链路",
+  "多端（Web + 后台 + App）用 NestJS Monorepo，小型 MVP 不必上这套",
+  "大型云收在后面，不挡起步",
   "专为出海场景优化",
 ]
 
@@ -43,18 +43,18 @@ export default function HomePage() {
           </Badge>
 
           <h1 className="mx-auto max-w-3xl font-serif text-4xl font-bold leading-tight text-balance text-foreground md:text-6xl">
-            快速构建你的{" "}
-            <span className="gradient-text">出海 MVP</span>
+            按目标推荐{" "}
+            <span className="gradient-text">出海技术栈</span>
           </h1>
 
           <p className="mx-auto mt-6 max-w-xl text-base leading-relaxed text-muted md:text-lg">
-            选择技术栈，免费获取 AI 提示词；付费下载可运行代码；或者让我们直接帮你打造完整 MVP。
+            新项目用 Vercel 尽快上线，或用 Cloudflare 把成本压低。Vite 项目也可以看 Void，它还在内测。
           </p>
 
           <div className="mt-8 flex flex-col items-center justify-center gap-3 sm:flex-row">
             <Link href="#generator">
               <Button size="lg" className="gap-2">
-                免费开始生成
+                按目标看看推荐
                 <ArrowRight className="h-4 w-4" />
               </Button>
             </Link>
@@ -68,18 +68,18 @@ export default function HomePage() {
           {/* Stats */}
           <div className="mt-12 flex flex-wrap items-center justify-center gap-8">
             <div className="text-center">
-              <p className="font-serif text-3xl font-bold text-foreground">30+</p>
-              <p className="text-sm text-muted">精选技术工具</p>
+              <p className="font-serif text-3xl font-bold text-foreground">Vercel</p>
+              <p className="text-sm text-muted">尽快上线</p>
             </div>
             <div className="h-8 w-px bg-border" />
             <div className="text-center">
-              <p className="font-serif text-3xl font-bold text-foreground">8</p>
-              <p className="text-sm text-muted">技术类别</p>
+              <p className="font-serif text-3xl font-bold text-foreground">Cloudflare</p>
+              <p className="text-sm text-muted">成本更低</p>
             </div>
             <div className="h-8 w-px bg-border" />
             <div className="text-center">
-              <p className="font-serif text-3xl font-bold text-foreground">$20</p>
-              <p className="text-sm text-muted">起步价</p>
+              <p className="font-serif text-3xl font-bold text-foreground">Void</p>
+              <p className="text-sm text-muted">Vite · 内测</p>
             </div>
           </div>
         </section>
@@ -88,7 +88,7 @@ export default function HomePage() {
         <section className="border-y border-border bg-card/30 py-16">
           <div className="container mx-auto px-4">
             <h2 className="mb-10 text-center font-serif text-2xl font-bold text-foreground md:text-3xl">
-              三步快速出海
+              先定目标，再动技术
             </h2>
             <div className="grid grid-cols-1 gap-6 md:grid-cols-3">
               {STEPS.map((s) => (
@@ -117,10 +117,10 @@ export default function HomePage() {
                 <div>
                   <Badge className="mb-4">功能一览</Badge>
                   <h2 className="font-serif text-3xl font-bold text-foreground text-balance">
-                    一站式出海技术解决方案
+                    推荐在前，清单在后
                   </h2>
                   <p className="mt-4 text-muted leading-relaxed">
-                    从技术选型到代码交付，帮你跳过繁琐的调研和配置，专注于产品本身。
+                    大多数出海 MVP 不需要先比较阿里云、AWS 和 Azure。选定目标后，再决定要不要改其中几项。
                   </p>
                   <div className="mt-6 flex gap-3">
                     <Link href="#generator">

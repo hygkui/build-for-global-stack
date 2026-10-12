@@ -36,7 +36,7 @@ export function NavbarMobile({ isLoggedIn }: NavbarMobileProps) {
             className="text-sm text-muted transition-colors hover:text-foreground"
             onClick={() => setOpen(false)}
           >
-            技术栈生成器
+            按目标推荐
           </Link>
           <Link
             href="/pricing"

@@ -6,8 +6,13 @@ import { auth } from "@/lib/auth/server"
 import { NavbarMobile } from "@/components/navbar-mobile"
 
 export async function Navbar() {
-  const { data: session } = await auth.getSession()
-  const isLoggedIn = !!session?.user
+  let isLoggedIn = false
+  try {
+    const { data: session } = await auth.getSession()
+    isLoggedIn = !!session?.user
+  } catch {
+    isLoggedIn = false
+  }
 
   return (
     <header className="sticky top-0 z-50 border-b border-border/50 bg-background/80 backdrop-blur-md">
@@ -28,7 +33,7 @@ export async function Navbar() {
             href="/#generator"
             className="text-sm text-muted transition-colors hover:text-foreground"
           >
-            技术栈生成器
+            按目标推荐
           </Link>
           <Link
             href="/pricing"
