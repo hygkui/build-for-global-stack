@@ -1,10 +1,10 @@
 "use client"
 
 import { useState, useEffect } from "react"
-import { Copy, Check, Sparkles } from "lucide-react"
+import { Copy, Check } from "lucide-react"
+import { Button } from "@/components/ui/button"
 import { TECH_STACKS, DEPLOYMENT_COMPAT } from "@/lib/tech-stacks"
 import { type SelectedStack } from "@/components/tech-stack-selector"
-import { cn } from "@/lib/utils"
 
 function generatePrompt(selected: SelectedStack): string {
   if (Object.keys(selected).length === 0) return ""
@@ -273,57 +273,31 @@ export function PromptGenerator({ selected }: PromptGeneratorProps) {
     setTimeout(() => setCopied(false), 2000)
   }
 
-  if (selectedCount === 0) {
-    return (
-      <div className="flex min-h-[300px] flex-col items-center justify-center rounded-xl border border-dashed border-border bg-card/50 p-8 text-center">
-        <Sparkles className="mb-3 h-10 w-10 text-muted-foreground/40" />
-        <p className="text-sm font-medium text-muted-foreground">先选一个目标</p>
-        <p className="mt-1 text-xs text-muted-foreground/70">选中后按推荐组合生成提示词</p>
-      </div>
-    )
-  }
+  if (selectedCount === 0 || !prompt) return null
 
   return (
-    <div className="flex flex-col gap-4">
-      {/* 提示词预览 */}
-      <div className="relative rounded-xl border border-border bg-card">
-        <div className="flex items-center justify-between border-b border-border px-4 py-2.5">
-          <div className="flex items-center gap-2">
-            <div className="flex gap-1.5">
-              <div className="h-3 w-3 rounded-full bg-destructive/60" />
-              <div className="h-3 w-3 rounded-full bg-yellow-500/60" />
-              <div className="h-3 w-3 rounded-full bg-primary/60" />
-            </div>
-            <span className="font-mono text-xs text-muted-foreground">prompt.md</span>
-          </div>
-          <button
-            onClick={handleCopy}
-            className={cn(
-              "flex items-center gap-1.5 rounded-md px-2 py-1 text-xs transition-all",
-              copied
-                ? "bg-primary/20 text-primary"
-                : "text-muted-foreground hover:bg-secondary hover:text-foreground"
-            )}
-          >
-            {copied ? (
-              <><Check className="h-3 w-3" />已复制</>
-            ) : (
-              <><Copy className="h-3 w-3" />复制</>
-            )}
-          </button>
+    <div className="flex flex-col gap-3">
+      <Button type="button" size="lg" onClick={handleCopy} className="w-full sm:w-auto" aria-live="polite">
+        {copied ? (
+          <>
+            <Check className="h-4 w-4" />
+            已复制
+          </>
+        ) : (
+          <>
+            <Copy className="h-4 w-4" />
+            复制提示词
+          </>
+        )}
+      </Button>
+      <div className="rounded-lg border border-border bg-card">
+        <div className="border-b border-border px-4 py-2.5">
+          <span className="font-mono text-xs text-muted">prompt.md</span>
         </div>
-        <pre className="max-h-[480px] overflow-y-auto p-4 font-mono text-xs leading-relaxed text-foreground/90 whitespace-pre-wrap">
+        <pre className="max-h-80 overflow-y-auto p-4 font-mono text-xs leading-relaxed text-foreground whitespace-pre-wrap">
           {prompt}
         </pre>
       </div>
-
-      {/* 使用说明 */}
-      <p className="text-center text-xs text-muted-foreground">
-        复制提示词后，粘贴到{" "}
-        <span className="text-foreground">v0.dev</span>、
-        <span className="text-foreground">Cursor</span> 或{" "}
-        <span className="text-foreground">Claude</span> 中即可生成项目
-      </p>
     </div>
   )
 }

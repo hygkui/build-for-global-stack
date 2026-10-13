@@ -1,12 +1,10 @@
 import type { Metadata, Viewport } from "next"
-import { Inter, Syne, JetBrains_Mono } from "next/font/google"
-import { NeonAuthUIProvider } from "@neondatabase/auth/react"
-import { authClient } from "@/lib/auth/client"
+import { DM_Sans, Space_Grotesk, JetBrains_Mono } from "next/font/google"
 import { Navbar } from "@/components/navbar"
 import "./globals.css"
 
-const inter = Inter({ subsets: ["latin"], variable: "--font-inter" })
-const syne = Syne({ subsets: ["latin"], variable: "--font-syne" })
+const dmSans = DM_Sans({ subsets: ["latin"], variable: "--font-dm-sans" })
+const spaceGrotesk = Space_Grotesk({ subsets: ["latin"], variable: "--font-space-grotesk" })
 const jetbrainsMono = JetBrains_Mono({ subsets: ["latin"], variable: "--font-jetbrains-mono" })
 
 export const metadata: Metadata = {
@@ -31,17 +29,10 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
   return (
     <html lang="zh-CN" className="dark" suppressHydrationWarning>
       <body
-        className={`${inter.variable} ${syne.variable} ${jetbrainsMono.variable} font-sans min-h-screen bg-background text-foreground`}
+        className={`${dmSans.variable} ${spaceGrotesk.variable} ${jetbrainsMono.variable} font-sans min-h-screen bg-background text-foreground`}
       >
-        <NeonAuthUIProvider
-          authClient={authClient}
-          redirectTo="/"
-          emailOTP
-          credentials={{ forgotPassword: true }}
-        >
-          <Navbar />
-          {children}
-        </NeonAuthUIProvider>
+        <Navbar />
+        {children}
       </body>
     </html>
   )
