@@ -34,10 +34,10 @@ export function Navbar() {
             收款与避坑
           </Link>
           <Link
-            href="/#cost-compare"
-            className="hidden min-h-10 items-center rounded-lg px-3 text-sm font-medium text-muted transition-colors hover:bg-secondary/60 hover:text-foreground sm:inline-flex"
+            href="/#agent-access"
+            className="inline-flex min-h-10 items-center rounded-lg px-3 text-sm font-medium text-muted transition-colors hover:bg-secondary/60 hover:text-foreground"
           >
-            成本对比
+            MCP & Skill
           </Link>
         </nav>
       </div>

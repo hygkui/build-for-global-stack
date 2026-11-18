@@ -1,6 +1,7 @@
 import { ArrowDown, CheckCircle2, Globe, Sparkles } from "lucide-react"
 import { GeneratorSection } from "@/components/generator-section"
 import { ChinaGlobalGuide } from "@/components/china-global-guide"
+import { AgentAccessSection } from "@/components/agent-access-section"
 
 export default function HomePage() {
   return (
@@ -40,6 +41,7 @@ export default function HomePage() {
 
         <GeneratorSection />
         <ChinaGlobalGuide />
+        <AgentAccessSection />
       </main>
 
       <footer className="border-t border-border py-8">
