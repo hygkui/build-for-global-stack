@@ -1,5 +1,5 @@
 /**
- * 根据用户选择的技术栈生成可运行的 Next.js 项目代码文件
+ * 根据用户选择的技术栈生成可运行的项目代码/脚手架配置文件
  * 返回一个 Record<文件路径, 文件内容> 的 Map 用于 ZIP 打包
  */
 
@@ -31,6 +31,7 @@ export function generateTemplateFiles(
   const businessType = options.businessType?.trim() || "SaaS 订阅产品"
   const languages = options.languages?.length ? options.languages : ["en", "zh"]
 
+  const starter = techStack["starter"]
   const deploy = techStack["deployment"] ?? "vercel"
   const db = techStack["database"] ?? "neon"
   const orm = techStack["orm"] ?? "drizzle"
@@ -44,7 +45,217 @@ export function generateTemplateFiles(
 
   const files: Record<string, string> = {}
 
-  // ── package.json ──────────────────────────────────────────────────────
+  // ── .env.example（所有路线共用）─────────────────────────────────────────
+  const envLines: string[] = [
+    "# ── 数据库 ──────────────────────────────────────────────────────────",
+    "DATABASE_URL=",
+    "",
+  ]
+
+  if (auth === "better-auth") {
+    envLines.push("# ── Better Auth ───────────────────────────────────────────────────")
+    envLines.push("BETTER_AUTH_SECRET=  # openssl rand -base64 32")
+    envLines.push("BETTER_AUTH_URL=http://localhost:3000")
+    envLines.push("")
+  } else if (auth === "neon-auth") {
+    envLines.push("# ── Neon Auth ──────────────────────────────────────────────────────")
+    envLines.push("NEON_AUTH_BASE_URL=")
+    envLines.push("NEON_AUTH_COOKIE_SECRET=  # openssl rand -base64 32")
+    envLines.push("")
+  } else if (auth === "supabase-auth") {
+    envLines.push("# ── Supabase ──────────────────────────────────────────────────────")
+    envLines.push("NEXT_PUBLIC_SUPABASE_URL=")
+    envLines.push("NEXT_PUBLIC_SUPABASE_ANON_KEY=")
+    envLines.push("SUPABASE_SERVICE_ROLE_KEY=")
+    envLines.push("")
+  } else if (auth === "clerk") {
+    envLines.push("# ── Clerk Auth ────────────────────────────────────────────────────")
+    envLines.push("NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY=")
+    envLines.push("CLERK_SECRET_KEY=")
+    envLines.push("")
+  }
+
+  if (payment === "creem") {
+    envLines.push("# ── Creem (Merchant of Record，适合无海外公司卖家) ────────────────")
+    envLines.push("CREEM_API_KEY=")
+    envLines.push("CREEM_WEBHOOK_SECRET=")
+    envLines.push("")
+  } else if (payment === "waffo") {
+    envLines.push("# ── Waffo (Merchant of Record，支持打款至大陆) ────────────────────")
+    envLines.push("WAFFO_API_KEY=")
+    envLines.push("WAFFO_WEBHOOK_SECRET=")
+    envLines.push("")
+  } else if (payment === "stripe") {
+    envLines.push("# ── Stripe ────────────────────────────────────────────────────────")
+    envLines.push("STRIPE_SECRET_KEY=")
+    envLines.push("NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY=")
+    envLines.push("STRIPE_WEBHOOK_SECRET=")
+    envLines.push("")
+  } else if (payment === "lemonsqueezy") {
+    envLines.push("# ── Lemon Squeezy ────────────────────────────────────────────────")
+    envLines.push("LEMONSQUEEZY_API_KEY=")
+    envLines.push("LEMONSQUEEZY_WEBHOOK_SECRET=")
+    envLines.push("")
+  }
+
+  if (email === "resend") {
+    envLines.push("# ── Resend 邮件服务 ────────────────────────────────────────────────")
+    envLines.push("RESEND_API_KEY=")
+    envLines.push("")
+  }
+
+  if (cron === "qstash") {
+    envLines.push("# ── Upstash QStash ────────────────────────────────────────────────")
+    envLines.push("QSTASH_TOKEN=")
+    envLines.push("QSTASH_CURRENT_SIGNING_KEY=")
+    envLines.push("QSTASH_NEXT_SIGNING_KEY=")
+    envLines.push("")
+  }
+
+  if (ws === "ably") {
+    envLines.push("# ── Ably ──────────────────────────────────────────────────────────")
+    envLines.push("ABLY_API_KEY=")
+    envLines.push("")
+  } else if (ws === "pusher") {
+    envLines.push("# ── Pusher ────────────────────────────────────────────────────────")
+    envLines.push("PUSHER_APP_ID=")
+    envLines.push("PUSHER_KEY=")
+    envLines.push("PUSHER_SECRET=")
+    envLines.push("PUSHER_CLUSTER=ap1")
+    envLines.push("NEXT_PUBLIC_PUSHER_KEY=")
+    envLines.push("NEXT_PUBLIC_PUSHER_CLUSTER=ap1")
+    envLines.push("")
+  }
+
+  envLines.push("# ── App ───────────────────────────────────────────────────────────")
+  envLines.push("NEXT_PUBLIC_APP_URL=http://localhost:3000")
+
+  files[".env.example"] = envLines.join("\n")
+  files["AGENTS.md"] = generateAgentsMd(techStack)
+
+  // ── 专用脚手架路线（TanStarter / Monorepo / Void）────────────────────────
+  if (starter === "tanstarter") {
+    files["wrangler.toml"] = `name = "${projectSlug}"
+compatibility_date = "2025-03-01"
+compatibility_flags = ["nodejs_compat"]
+
+# Bindings provisioned via TanStarter / Cloudflare Dashboard
+# [[d1_databases]]
+# binding = "DB"
+# database_name = "${projectSlug}-db"
+# database_id = ""
+`
+    files["README.md"] = `# ${displayName}
+
+> ${businessType} · Target Languages: ${languages.join(", ")}
+> Stack: TanStarter (TanStack Start + Cloudflare Workers + D1 + R2 + KV)
+
+## Bootstrap with TanStarter CLI
+
+\`\`\`bash
+npx tanstarter-cli@latest create ${projectSlug}
+cd ${projectSlug}
+cp ../.env.example .env
+pnpm install
+pnpm dev
+\`\`\`
+
+## Included in This Bundle
+
+- \`AGENTS.md\` — AI coding rules for Cursor / Claude Code
+- \`.env.example\` — Environment variable template (including ${payment})
+- \`wrangler.toml\` — Cloudflare Workers starter configuration
+`
+    return files
+  }
+
+  if (starter === "fullstack-monorepo") {
+    files["pnpm-workspace.yaml"] = `packages:
+  - "apps/*"
+  - "shared-types"
+`
+    files["turbo.json"] = JSON.stringify(
+      {
+        $schema: "https://turbo.build/schema.json",
+        tasks: {
+          build: { dependsOn: ["^build"], outputs: [".next/**", "dist/**"] },
+          dev: { cache: false, persistent: true },
+          lint: {},
+        },
+      },
+      null,
+      2
+    )
+    files["package.json"] = JSON.stringify(
+      {
+        name: projectSlug,
+        private: true,
+        scripts: {
+          dev: "turbo dev",
+          build: "turbo build",
+          lint: "turbo lint",
+        },
+        devDependencies: {
+          turbo: "^2.4.0",
+        },
+      },
+      null,
+      2
+    )
+    files["README.md"] = `# ${displayName} (Fullstack Monorepo)
+
+> ${businessType} · Target Languages: ${languages.join(", ")}
+
+## Workspace Layout
+
+- \`apps/server\` — NestJS + Drizzle + Better Auth (port 3000)
+- \`apps/web\` — Next.js + Tailwind + shadcn/ui (port 3001)
+- \`apps/admin\` — Vite + React + Arco Design (port 3002)
+- \`apps/mobile\` — Expo + React Native (port 8081)
+- \`shared-types\` — Shared TypeScript types
+
+## Getting Started
+
+1. Put \`AGENTS.md\` in the repository root so Cursor / Claude Code follows the monorepo rules.
+2. Copy \`.env.example\` to \`apps/server/.env\`.
+3. Install dependencies with \`pnpm install\` and start with \`pnpm dev\`.
+`
+    return files
+  }
+
+  if (deploy === "void") {
+    files["void.json"] = JSON.stringify(
+      {
+        name: projectSlug,
+        runtime: "cloudflare-workers",
+        resources: {
+          d1: true,
+          r2: true,
+          kv: true,
+        },
+      },
+      null,
+      2
+    )
+    files["README.md"] = `# ${displayName} (Vite + Void)
+
+> ${businessType} · Target Languages: ${languages.join(", ")}
+
+## Getting Started
+
+\`\`\`bash
+pnpm create vite ${projectSlug} --template react-ts
+cd ${projectSlug}
+pnpm install
+void deploy
+\`\`\`
+
+> Note: Void is currently in closed beta. Make sure your account has access before deploying.
+`
+    return files
+  }
+
+  // ── 标准 Next.js 单应用模板 ─────────────────────────────────────────────
   const deps: Record<string, string> = {
     next: "15.2.4",
     react: "^19.0.0",
@@ -148,94 +359,6 @@ export function generateTemplateFiles(
     2
   )
 
-  // ── .env.example ──────────────────────────────────────────────────────
-  const envLines: string[] = [
-    "# ── 数据库 ──────────────────────────────────────────────────────────",
-    "DATABASE_URL=",
-    "",
-  ]
-
-  if (auth === "better-auth") {
-    envLines.push("# ── Better Auth ───────────────────────────────────────────────────")
-    envLines.push("BETTER_AUTH_SECRET=  # openssl rand -base64 32")
-    envLines.push("BETTER_AUTH_URL=http://localhost:3000")
-    envLines.push("")
-  } else if (auth === "neon-auth") {
-    envLines.push("# ── Neon Auth ──────────────────────────────────────────────────────")
-    envLines.push("NEON_AUTH_BASE_URL=")
-    envLines.push("NEON_AUTH_COOKIE_SECRET=  # openssl rand -base64 32")
-    envLines.push("")
-  } else if (auth === "supabase-auth") {
-    envLines.push("# ── Supabase ──────────────────────────────────────────────────────")
-    envLines.push("NEXT_PUBLIC_SUPABASE_URL=")
-    envLines.push("NEXT_PUBLIC_SUPABASE_ANON_KEY=")
-    envLines.push("SUPABASE_SERVICE_ROLE_KEY=")
-    envLines.push("")
-  } else if (auth === "clerk") {
-    envLines.push("# ── Clerk Auth ────────────────────────────────────────────────────")
-    envLines.push("NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY=")
-    envLines.push("CLERK_SECRET_KEY=")
-    envLines.push("")
-  }
-
-  if (payment === "creem") {
-    envLines.push("# ── Creem (Merchant of Record，适合无海外公司卖家) ────────────────")
-    envLines.push("CREEM_API_KEY=")
-    envLines.push("CREEM_WEBHOOK_SECRET=")
-    envLines.push("")
-  } else if (payment === "waffo") {
-    envLines.push("# ── Waffo (Merchant of Record，支持打款至大陆) ────────────────────")
-    envLines.push("WAFFO_API_KEY=")
-    envLines.push("WAFFO_WEBHOOK_SECRET=")
-    envLines.push("")
-  } else if (payment === "stripe") {
-    envLines.push("# ── Stripe ────────────────────────────────────────────────────────")
-    envLines.push("STRIPE_SECRET_KEY=")
-    envLines.push("NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY=")
-    envLines.push("STRIPE_WEBHOOK_SECRET=")
-    envLines.push("")
-  } else if (payment === "lemonsqueezy") {
-    envLines.push("# ── Lemon Squeezy ────────────────────────────────────────────────")
-    envLines.push("LEMONSQUEEZY_API_KEY=")
-    envLines.push("LEMONSQUEEZY_WEBHOOK_SECRET=")
-    envLines.push("")
-  }
-
-  if (email === "resend") {
-    envLines.push("# ── Resend 邮件服务 ────────────────────────────────────────────────")
-    envLines.push("RESEND_API_KEY=")
-    envLines.push("")
-  }
-
-  if (cron === "qstash") {
-    envLines.push("# ── Upstash QStash ────────────────────────────────────────────────")
-    envLines.push("QSTASH_TOKEN=")
-    envLines.push("QSTASH_CURRENT_SIGNING_KEY=")
-    envLines.push("QSTASH_NEXT_SIGNING_KEY=")
-    envLines.push("")
-  }
-
-  if (ws === "ably") {
-    envLines.push("# ── Ably ──────────────────────────────────────────────────────────")
-    envLines.push("ABLY_API_KEY=")
-    envLines.push("")
-  } else if (ws === "pusher") {
-    envLines.push("# ── Pusher ────────────────────────────────────────────────────────")
-    envLines.push("PUSHER_APP_ID=")
-    envLines.push("PUSHER_KEY=")
-    envLines.push("PUSHER_SECRET=")
-    envLines.push("PUSHER_CLUSTER=ap1")
-    envLines.push("NEXT_PUBLIC_PUSHER_KEY=")
-    envLines.push("NEXT_PUBLIC_PUSHER_CLUSTER=ap1")
-    envLines.push("")
-  }
-
-  envLines.push("# ── App ───────────────────────────────────────────────────────────")
-  envLines.push("NEXT_PUBLIC_APP_URL=http://localhost:3000")
-
-  files[".env.example"] = envLines.join("\n")
-
-  // ── tsconfig.json ──────────────────────────────────────────────────────
   files["tsconfig.json"] = JSON.stringify(
     {
       compilerOptions: {
@@ -262,7 +385,6 @@ export function generateTemplateFiles(
     2
   )
 
-  // ── next.config.mjs ────────────────────────────────────────────────────
   const nextConfigLines: string[] = ["/** @type {import('next').NextConfig} */", "const nextConfig = {"]
   if (docker === "dockerfile-only" || docker === "docker-compose") {
     nextConfigLines.push("  output: 'standalone',")
@@ -270,7 +392,6 @@ export function generateTemplateFiles(
   nextConfigLines.push("}", "", "export default nextConfig")
   files["next.config.mjs"] = nextConfigLines.join("\n")
 
-  // ── tailwind.config.ts ─────────────────────────────────────────────────
   files["tailwind.config.ts"] = `import type { Config } from "tailwindcss"
 
 const config = {
@@ -296,7 +417,6 @@ const config = {
 export default config
 `
 
-  // ── app/globals.css ────────────────────────────────────────────────────
   const cssImports: string[] = []
   if (auth === "neon-auth") cssImports.push('@import "@neondatabase/auth/ui/tailwind";')
 
@@ -361,7 +481,6 @@ export default config
 }
 `
 
-  // ── middleware.ts ──────────────────────────────────────────────────────
   if (auth === "neon-auth") {
     files["middleware.ts"] = `import { auth } from "@/lib/auth/server"
 
@@ -388,7 +507,6 @@ export const config = {
 `
   }
 
-  // ── lib/db.ts ──────────────────────────────────────────────────────────
   if (db === "neon" || db === "neon-serverless") {
     files["lib/db.ts"] = orm === "drizzle"
       ? `import { neon } from "@neondatabase/serverless"
@@ -414,7 +532,6 @@ export const supabase = createClient(
 `
   }
 
-  // ── lib/auth/server.ts ──────────────────────────────────────────────────
   if (auth === "better-auth") {
     files["lib/auth/server.ts"] = `import { betterAuth } from "better-auth"
 
@@ -422,7 +539,6 @@ export const auth = betterAuth({
   emailAndPassword: {
     enabled: true,
   },
-  // TODO: Wire your Drizzle / Postgres adapter here
 })
 `
     files["lib/auth/client.ts"] = `"use client"
@@ -460,7 +576,6 @@ export { auth }
 `
   }
 
-  // ── Payment webhooks ───────────────────────────────────────────────────
   if (payment === "creem") {
     files["app/api/webhooks/creem/route.ts"] = `import { NextRequest, NextResponse } from "next/server"
 import crypto from "crypto"
@@ -481,7 +596,6 @@ export async function POST(req: NextRequest) {
 
   const event = JSON.parse(body)
   if (event.eventType === "checkout.completed" || event.eventType === "subscription.active") {
-    // TODO: Grant user entitlement in database
     console.log("Creem payment verified:", event.object?.id)
   }
 
@@ -493,7 +607,6 @@ export async function POST(req: NextRequest) {
 
 export async function POST(req: NextRequest) {
   const body = await req.json()
-  // TODO: Verify Waffo webhook signature using WAFFO_WEBHOOK_SECRET
   console.log("Waffo webhook received:", body?.event)
   return NextResponse.json({ ok: true })
 }
@@ -527,7 +640,6 @@ export async function POST(req: NextRequest) {
   if (event.type === "checkout.session.completed") {
     const session = event.data.object
     console.log("Payment completed:", session.id)
-    // TODO: Update your database order status here
   }
 
   return NextResponse.json({ ok: true })
@@ -535,7 +647,6 @@ export async function POST(req: NextRequest) {
 `
   }
 
-  // ── app/layout.tsx ──────────────────────────────────────────────────────
   const layoutImports: string[] = ['import type { Metadata } from "next"', 'import "./globals.css"']
   let layoutProviderOpen = ""
   let layoutProviderClose = ""
@@ -569,7 +680,6 @@ ${layoutProviderOpen ? layoutProviderOpen + "\n          {children}\n" + layoutP
 }
 `
 
-  // ── app/page.tsx ────────────────────────────────────────────────────────
   files["app/page.tsx"] = `export default function HomePage() {
   return (
     <main className="min-h-screen flex items-center justify-center p-6">
@@ -593,27 +703,7 @@ ${layoutProviderOpen ? layoutProviderOpen + "\n          {children}\n" + layoutP
 }
 `
 
-  // ── app/dashboard/page.tsx ──────────────────────────────────────────────
-  if (auth === "neon-auth") {
-    files["app/dashboard/page.tsx"] = `import { auth } from "@/lib/auth/server"
-import { redirect } from "next/navigation"
-
-export const dynamic = "force-dynamic"
-
-export default async function DashboardPage() {
-  const { data: session } = await auth.getSession()
-  if (!session?.user) redirect("/auth/sign-in")
-
-  return (
-    <main className="container mx-auto p-8">
-      <h1 className="text-3xl font-bold mb-2">Dashboard</h1>
-      <p className="text-muted-foreground">Welcome back, {session.user.email}</p>
-    </main>
-  )
-}
-`
-  } else {
-    files["app/dashboard/page.tsx"] = `export default function DashboardPage() {
+  files["app/dashboard/page.tsx"] = `export default function DashboardPage() {
   return (
     <main className="container mx-auto p-8">
       <h1 className="text-3xl font-bold mb-2">${displayName} Dashboard</h1>
@@ -622,59 +712,7 @@ export default async function DashboardPage() {
   )
 }
 `
-  }
 
-  // ── Auth pages (Neon Auth) ──────────────────────────────────────────────
-  if (auth === "neon-auth") {
-    files["app/auth/[path]/page.tsx"] = `import { AuthView } from "@neondatabase/auth/react"
-
-export const dynamicParams = false
-
-export function generateStaticParams() {
-  return [
-    { path: "sign-in" },
-    { path: "sign-up" },
-    { path: "sign-out" },
-    { path: "forgot-password" },
-  ]
-}
-
-export default async function AuthPage({ params }: { params: Promise<{ path: string }> }) {
-  const { path } = await params
-  return (
-    <main className="container mx-auto flex min-h-screen items-center justify-center p-4">
-      <AuthView path={path} />
-    </main>
-  )
-}
-`
-
-    files["app/account/[path]/page.tsx"] = `import { AccountView } from "@neondatabase/auth/react"
-import { accountViewPaths } from "@neondatabase/auth/react/ui/server"
-
-export const dynamicParams = false
-
-export function generateStaticParams() {
-  return Object.values(accountViewPaths).map((path) => ({ path }))
-}
-
-export default async function AccountPage({ params }: { params: Promise<{ path: string }> }) {
-  const { path } = await params
-  return (
-    <main className="container mx-auto p-4 md:p-8">
-      <AccountView path={path} />
-    </main>
-  )
-}
-`
-
-    files["app/api/auth/[...path]/route.ts"] = `import { auth } from "@/lib/auth/server"
-
-export const { GET, POST } = auth.handler()
-`
-  }
-
-  // ── Cron handler ────────────────────────────────────────────────────────
   if (cron === "native-cron" || cron === "qstash") {
     files["app/api/cron/daily/route.ts"] = `import { NextRequest, NextResponse } from "next/server"
 
@@ -690,7 +728,6 @@ export async function GET(req: NextRequest) {
 `
   }
 
-  // ── WebSocket (SSE) ──────────────────────────────────────────────────────
   if (ws === "sse") {
     files["app/api/events/route.ts"] = `export async function GET() {
   const encoder = new TextEncoder()
@@ -717,7 +754,6 @@ export async function GET(req: NextRequest) {
 `
   }
 
-  // ── Docker files ────────────────────────────────────────────────────────
   if (docker === "dockerfile-only" || docker === "docker-compose") {
     files["Dockerfile"] = `FROM node:20-alpine AS base
 
@@ -773,15 +809,11 @@ npm-debug.log
 `
   }
 
-  // ── AGENTS.md ───────────────────────────────────────────────────────────
-  files["AGENTS.md"] = generateAgentsMd(techStack)
-
-  // ── README.md ────────────────────────────────────────────────────────────
   const readmeLines: string[] = [
     `# ${displayName}`,
     "",
     `> ${businessType} · Target Languages: ${languages.join(", ")}`,
-    "> Generated by [出海黄金组合](https://github.com/hygkui/build-for-global)",
+    "> Generated by [出海黄金组合](https://github.com/hygkui/build-for-global-stack)",
     "",
     "## Tech Stack",
     "",
@@ -811,14 +843,8 @@ npm-debug.log
     "## Getting Started",
     "",
     "1. Copy `.env.example` to `.env.local` and fill in your values",
-    "2. Install dependencies:",
-    "   ```bash",
-    "   pnpm install",
-    "   ```",
-    "3. Run the development server:",
-    "   ```bash",
-    "   pnpm dev",
-    "   ```",
+    "2. Install dependencies: `pnpm install`",
+    "3. Run the development server: `pnpm dev`",
     "4. Open [http://localhost:3000](http://localhost:3000)",
     "",
     "## AI Collaboration",

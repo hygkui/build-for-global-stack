@@ -8,6 +8,7 @@ import {
   ChevronRight,
   ExternalLink,
   RotateCcw,
+  Share2,
   ShieldAlert,
   ShieldCheck,
   SlidersHorizontal,
@@ -25,9 +26,21 @@ import {
 import { cn } from "@/lib/utils"
 
 const STEPS = [
-  { title: "选定阶段与项目信息", hint: "先选当前阶段，再填项目名称与目标语言，后续提示词和代码包会自动匹配。" },
-  { title: "确认与微调技术栈", hint: "这一层已经配好。可点开官方文档核对，或按需替换其中几项。" },
-  { title: "导出代码、规范与清单", hint: "复制给 Cursor / Claude Code，或直接下载可运行项目 ZIP。" },
+  {
+    shortTitle: "选阶段",
+    title: "选定阶段与项目信息",
+    hint: "先选当前阶段，再填项目名称与目标语言，后续提示词和代码包会自动匹配。",
+  },
+  {
+    shortTitle: "调技术栈",
+    title: "确认与微调技术栈",
+    hint: "这一层已经配好。可点开官方文档核对，或按需替换其中几项。",
+  },
+  {
+    shortTitle: "导出",
+    title: "导出代码、规范与清单",
+    hint: "复制给 Cursor / Claude Code，或直接下载可运行项目 ZIP。",
+  },
 ]
 
 const LAYERS: { title: string; ids: string[] }[] = [
@@ -52,6 +65,8 @@ const LANGUAGE_OPTIONS = [
   { id: "de", label: "Deutsch (de)" },
 ]
 
+const STATE_STORAGE_KEY = "build-for-global:config:v1"
+
 const START_GOALS = PRIMARY_GOALS.filter((goal) => goal.id !== "void-vite")
 const GROW_GOALS = [
   PRIMARY_GOALS.find((goal) => goal.id === "void-vite")!,
@@ -68,7 +83,7 @@ function estimateMonthlyCost(selected: SelectedStack): string {
   if (deploy === "railway" || deploy === "digitalocean") return "$5 - $20 / 月起"
   if (deploy === "aws" || deploy === "azure" || deploy === "aliyun") return "按云账号用量计费"
   if (deploy === "cloudflare" || deploy === "void") return "$0 - $5 / 月起"
-  return "$0 / 月起（免费额度充足）"
+  return "$0 / 月起"
 }
 
 function hasCompatIssue(selected: SelectedStack): boolean {
@@ -85,6 +100,28 @@ function hasCompatIssue(selected: SelectedStack): boolean {
   if (cronId === "node-cron" && !compat.supportsDocker) return true
   if (wsId === "native-ws" && !compat.supportsDocker) return true
   return false
+}
+
+function encodeShareState(data: {
+  goalId: string | null
+  selected: SelectedStack
+  projectName: string
+  businessType: string
+  languages: string[]
+}): string {
+  const json = JSON.stringify(data)
+  const bytes = new TextEncoder().encode(json)
+  let binary = ""
+  for (const b of bytes) binary += String.fromCharCode(b)
+  return btoa(binary).replace(/\+/g, "-").replace(/\//g, "_").replace(/=+$/, "")
+}
+
+function decodeShareState(raw: string) {
+  const padded = raw.replace(/-/g, "+").replace(/_/g, "/") + "===".slice((raw.length + 3) % 4)
+  const binary = atob(padded)
+  const bytes = new Uint8Array(binary.length)
+  for (let i = 0; i < binary.length; i++) bytes[i] = binary.charCodeAt(i)
+  return JSON.parse(new TextDecoder().decode(bytes))
 }
 
 function GoalRow({
@@ -138,7 +175,7 @@ function GoalRow({
           <div className="mt-2 space-y-1 border-t border-border/60 pt-2">
             <span className="block text-xs text-foreground/85">适合：{goal.fit}</span>
             {goal.caution && (
-              <span className="block text-xs leading-relaxed text-yellow-500/90">注意：{goal.caution}</span>
+              <span className="block text-xs leading-relaxed text-yellow-600 dark:text-yellow-400">注意：{goal.caution}</span>
             )}
           </div>
         )}
@@ -158,12 +195,57 @@ export function GeneratorSection() {
   const [projectName, setProjectName] = useState("my-global-saas")
   const [businessType, setBusinessType] = useState(BUSINESS_TYPES[0])
   const [languages, setLanguages] = useState<string[]>(["en", "zh"])
+  const [hydrated, setHydrated] = useState(false)
+  const [shareCopied, setShareCopied] = useState(false)
 
   const headingRef = useRef<HTMLHeadingElement>(null)
 
+  // 从 URL ?s= 或 localStorage 恢复状态
+  useEffect(() => {
+    try {
+      const params = new URLSearchParams(window.location.search)
+      const sharedParam = params.get("s")
+      if (sharedParam) {
+        const parsed = decodeShareState(sharedParam)
+        if (parsed?.selected) {
+          setGoalId(parsed.goalId ?? null)
+          setSelected(parsed.selected)
+          if (parsed.projectName) setProjectName(parsed.projectName)
+          if (parsed.businessType) setBusinessType(parsed.businessType)
+          if (Array.isArray(parsed.languages) && parsed.languages.length > 0) setLanguages(parsed.languages)
+          setHydrated(true)
+          return
+        }
+      }
+      const saved = localStorage.getItem(STATE_STORAGE_KEY)
+      if (saved) {
+        const parsed = JSON.parse(saved)
+        if (parsed?.selected && Object.keys(parsed.selected).length > 0) {
+          setGoalId(parsed.goalId ?? null)
+          setSelected(parsed.selected)
+          if (parsed.projectName) setProjectName(parsed.projectName)
+          if (parsed.businessType) setBusinessType(parsed.businessType)
+          if (Array.isArray(parsed.languages) && parsed.languages.length > 0) setLanguages(parsed.languages)
+        }
+      }
+    } catch {}
+    setHydrated(true)
+  }, [])
+
+  // 状态自动持久化到 localStorage
+  useEffect(() => {
+    if (!hydrated) return
+    try {
+      localStorage.setItem(
+        STATE_STORAGE_KEY,
+        JSON.stringify({ goalId, selected, projectName, businessType, languages })
+      )
+    } catch {}
+  }, [hydrated, goalId, selected, projectName, businessType, languages])
+
   const goals = [...PRIMARY_GOALS, STRUCTURE_GOAL, ...ENTERPRISE_GOALS]
   const activeGoal = goals.find((goal) => goal.id === goalId) ?? null
-  const canAdvance = activeGoal !== null
+  const canAdvance = activeGoal !== null || Object.keys(selected).length > 0
 
   const goTo = (next: number) => {
     if (next === step || next < 0 || next > STEPS.length - 1) return
@@ -187,6 +269,14 @@ export function GeneratorSection() {
     })
   }
 
+  const handleCopyShareLink = async () => {
+    const encoded = encodeShareState({ goalId, selected, projectName, businessType, languages })
+    const url = `${window.location.origin}${window.location.pathname}?s=${encoded}#generator`
+    await navigator.clipboard.writeText(url)
+    setShareCopied(true)
+    setTimeout(() => setShareCopied(false), 2000)
+  }
+
   const skipFocus = useRef(true)
   useEffect(() => {
     if (skipFocus.current) {
@@ -204,30 +294,51 @@ export function GeneratorSection() {
   const paymentName = selected["payment"]
     ? getStackOption("payment", selected["payment"])?.name ?? selected["payment"]
     : "未选择"
+  const monthlyCost = estimateMonthlyCost(selected)
 
   return (
-    <section id="generator" className="container mx-auto max-w-6xl scroll-mt-20 px-4 py-8 md:py-12">
+    <section id="generator" className="container mx-auto max-w-6xl scroll-mt-20 px-4 py-6 md:py-12">
+      {/* 移动端顶部紧凑摘要条 */}
+      <div className="mb-4 flex flex-wrap items-center justify-between gap-2 rounded-xl border border-border bg-card/80 px-3.5 py-2.5 text-xs lg:hidden">
+        <div className="flex flex-wrap items-center gap-2">
+          <span className="font-semibold text-foreground">{deployName}</span>
+          <span className="text-muted">·</span>
+          <span className="font-mono font-medium text-primary">{monthlyCost}</span>
+        </div>
+        {compatBlocked ? (
+          <span className="inline-flex items-center gap-1 rounded-full bg-destructive/15 px-2 py-0.5 text-[11px] font-medium text-destructive">
+            <ShieldAlert className="h-3 w-3" />
+            存在兼容冲突
+          </span>
+        ) : (
+          <span className="inline-flex items-center gap-1 rounded-full bg-primary/15 px-2 py-0.5 text-[11px] font-medium text-primary">
+            <ShieldCheck className="h-3 w-3" />
+            兼容已校验
+          </span>
+        )}
+      </div>
+
       <div className="grid gap-6 lg:grid-cols-12">
         {/* 主工作区 */}
-        <div className="flex min-h-[34rem] flex-col rounded-2xl border border-border bg-card/50 shadow-xl shadow-black/20 backdrop-blur-sm lg:col-span-8">
-          <nav aria-label="步骤" className="border-b border-border px-4 py-4 sm:px-6">
-            <ol className="flex items-center gap-2">
+        <div className="flex min-h-[34rem] flex-col rounded-2xl border border-border bg-card/50 shadow-xl shadow-black/5 backdrop-blur-sm dark:shadow-black/20 lg:col-span-8">
+          <nav aria-label="步骤" className="border-b border-border px-3 py-3 sm:px-6 sm:py-4">
+            <ol className="flex items-center gap-1.5 sm:gap-2">
               {STEPS.map((item, index) => {
                 const done = index < step
                 const current = index === step
                 const locked = index > step && !canAdvance
                 return (
-                  <li key={item.title} className="flex min-w-0 flex-1 items-center gap-2">
+                  <li key={item.title} className="flex min-w-0 flex-1 items-center gap-1.5 sm:gap-2">
                     <button
                       type="button"
                       onClick={() => goTo(index)}
                       disabled={locked}
                       aria-current={current ? "step" : undefined}
-                      className="flex min-h-11 min-w-0 flex-1 cursor-pointer items-center gap-2 rounded-lg px-1 text-left focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring disabled:cursor-not-allowed disabled:opacity-50"
+                      className="flex min-h-10 min-w-0 flex-1 cursor-pointer items-center gap-2 rounded-lg px-1 text-left focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring disabled:cursor-not-allowed disabled:opacity-50"
                     >
                       <span
                         className={cn(
-                          "flex h-7 w-7 shrink-0 items-center justify-center rounded-full border text-xs font-semibold",
+                          "flex h-6 w-6 shrink-0 items-center justify-center rounded-full border text-xs font-semibold sm:h-7 sm:w-7",
                           current && "border-primary bg-primary text-primary-foreground",
                           done && "border-primary bg-background text-primary",
                           !current && !done && "border-border text-muted"
@@ -236,7 +347,10 @@ export function GeneratorSection() {
                       >
                         {done ? <Check className="h-3.5 w-3.5" /> : index + 1}
                       </span>
-                      <span className={cn("truncate text-xs sm:text-sm", current ? "font-semibold text-foreground" : "text-muted")}>
+                      <span className={cn("truncate text-xs sm:hidden", current ? "font-semibold text-foreground" : "text-muted")}>
+                        {item.shortTitle}
+                      </span>
+                      <span className={cn("hidden truncate text-sm sm:inline", current ? "font-semibold text-foreground" : "text-muted")}>
                         {item.title}
                       </span>
                     </button>
@@ -376,7 +490,7 @@ export function GeneratorSection() {
                 </div>
               )}
 
-              {step === 1 && activeGoal && (
+              {step === 1 && canAdvance && (
                 <div className="mt-5 space-y-5">
                   {LAYERS.map((layer) => {
                     const lines = layer.ids.flatMap((id) => {
@@ -418,17 +532,17 @@ export function GeneratorSection() {
                   <button
                     type="button"
                     onClick={() => setShowDetails((open) => !open)}
-                    className="inline-flex min-h-11 cursor-pointer items-center gap-2 rounded-lg border border-border bg-secondary/30 px-4 text-sm font-medium text-foreground transition-colors hover:bg-secondary/60"
+                    className="inline-flex min-h-11 w-full cursor-pointer items-center justify-center gap-2 rounded-lg border border-border bg-secondary/30 px-4 text-sm font-medium text-foreground transition-colors hover:bg-secondary/60 sm:w-auto"
                     aria-expanded={showDetails}
                   >
                     <SlidersHorizontal className="h-4 w-4 text-primary" />
-                    {showDetails ? "收起 14 项技术栈微调" : "展开微调（替换任意组件并自动检测兼容性）"}
+                    {showDetails ? "收起 14 项技术栈微调" : "展开微调（替换组件并校验兼容性）"}
                   </button>
                   {showDetails && <TechStackSelector selected={selected} onChange={setSelected} />}
                 </div>
               )}
 
-              {step === 2 && activeGoal && (
+              {step === 2 && canAdvance && (
                 <div className="mt-5">
                   <PromptGenerator
                     selected={selected}
@@ -515,7 +629,7 @@ export function GeneratorSection() {
               </div>
               <div className="flex items-center justify-between gap-2 border-t border-border pt-2.5">
                 <dt className="text-muted">起步月成本</dt>
-                <dd className="font-mono font-semibold text-primary">{estimateMonthlyCost(selected)}</dd>
+                <dd className="font-mono font-semibold text-primary">{monthlyCost}</dd>
               </div>
             </dl>
 
@@ -528,11 +642,22 @@ export function GeneratorSection() {
               </p>
             </div>
 
-            {step < 2 && (
-              <Button type="button" className="w-full" onClick={() => goTo(2)} disabled={!canAdvance}>
-                直接生成代码与提示词
+            <div className="space-y-2">
+              {step < 2 && (
+                <Button type="button" className="w-full" onClick={() => goTo(2)} disabled={!canAdvance}>
+                  直接生成代码与提示词
+                </Button>
+              )}
+              <Button
+                type="button"
+                variant="outline"
+                className="w-full"
+                onClick={handleCopyShareLink}
+              >
+                {shareCopied ? <Check className="h-4 w-4 text-primary" /> : <Share2 className="h-4 w-4" />}
+                {shareCopied ? "已复制方案分享链接" : "复制当前方案分享链接"}
               </Button>
-            )}
+            </div>
           </div>
         </aside>
       </div>

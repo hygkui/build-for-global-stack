@@ -8,6 +8,44 @@
     --font-space-grotesk: "Inter", "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", system-ui, -apple-system, sans-serif;
     --font-jetbrains-mono: "JetBrains Mono", "SF Mono", "Fira Code", ui-monospace, SFMono-Regular, Menlo, monospace;
 
+    /* 浅色主题 */
+    --background: 210 20% 98%;
+    --foreground: 222 47% 11%;
+
+    --card: 0 0% 100%;
+    --card-foreground: 222 47% 11%;
+
+    --popover: 0 0% 100%;
+    --popover-foreground: 222 47% 11%;
+
+    --primary: 142 71% 36%;
+    --primary-foreground: 0 0% 100%;
+
+    --secondary: 214 25% 93%;
+    --secondary-foreground: 222 47% 11%;
+
+    --muted: 215 16% 42%;
+    --muted-foreground: 215 16% 42%;
+
+    --muted-bg: 214 25% 94%;
+
+    --accent: 142 71% 36%;
+    --accent-foreground: 0 0% 100%;
+
+    --destructive: 0 78% 52%;
+    --destructive-foreground: 0 0% 100%;
+
+    --warning: 38 92% 44%;
+    --warning-foreground: 38 92% 28%;
+
+    --border: 214 20% 86%;
+    --input: 214 20% 86%;
+    --ring: 142 71% 36%;
+
+    --radius: 0.75rem;
+  }
+
+  .dark {
     /* 深色工作台：底色沉稳，翡翠绿只留给主操作与当前状态 */
     --background: 222 47% 6%;
     --foreground: 210 40% 98%;
@@ -35,11 +73,12 @@
     --destructive: 0 84% 60%;
     --destructive-foreground: 210 40% 98%;
 
+    --warning: 45 93% 47%;
+    --warning-foreground: 45 93% 65%;
+
     --border: 215 24% 19%;
     --input: 217 33% 16%;
     --ring: 142 71% 45%;
-
-    --radius: 0.75rem;
   }
 }
 
@@ -60,15 +99,26 @@
 /* 微妙的工程网格背景 */
 .bg-studio-grid {
   background-image:
+    radial-gradient(ellipse 80% 50% at 50% -10%, hsla(142, 71%, 45%, 0.12), transparent 70%),
+    linear-gradient(to right, hsla(215, 25%, 50%, 0.08) 1px, transparent 1px),
+    linear-gradient(to bottom, hsla(215, 25%, 50%, 0.08) 1px, transparent 1px);
+  background-size: 100% 100%, 40px 40px, 40px 40px;
+}
+
+.dark .bg-studio-grid {
+  background-image:
     radial-gradient(ellipse 80% 50% at 50% -10%, hsla(142, 71%, 45%, 0.14), transparent 70%),
     linear-gradient(to right, hsla(215, 25%, 24%, 0.16) 1px, transparent 1px),
     linear-gradient(to bottom, hsla(215, 25%, 24%, 0.16) 1px, transparent 1px);
-  background-size: 100% 100%, 40px 40px, 40px 40px;
 }
 
 /* 渐变文字 */
 .gradient-text {
   @apply bg-clip-text text-transparent;
+  background-image: linear-gradient(135deg, hsl(142, 76%, 42%) 0%, hsl(168, 75%, 38%) 100%);
+}
+
+.dark .gradient-text {
   background-image: linear-gradient(135deg, hsl(142, 76%, 58%) 0%, hsl(168, 75%, 52%) 100%);
 }
 

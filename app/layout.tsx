@@ -20,9 +20,23 @@ export const viewport: Viewport = {
   initialScale: 1,
 }
 
+const themeInitScript = `
+  try {
+    var t = localStorage.getItem('theme');
+    if (t === 'light') {
+      document.documentElement.classList.remove('dark');
+    } else {
+      document.documentElement.classList.add('dark');
+    }
+  } catch (e) {}
+`
+
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
     <html lang="zh-CN" className="dark scroll-smooth" suppressHydrationWarning>
+      <head>
+        <script dangerouslySetInnerHTML={{ __html: themeInitScript }} />
+      </head>
       <body className="font-sans min-h-screen bg-background text-foreground selection:bg-primary/25 selection:text-foreground">
         <Navbar />
         {children}

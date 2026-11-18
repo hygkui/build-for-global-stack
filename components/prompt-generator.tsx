@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useMemo } from "react"
+import { useState, useMemo, useEffect } from "react"
 import { zipSync, strToU8 } from "fflate"
 import {
   Copy,
@@ -9,6 +9,7 @@ import {
   FileCode2,
   FileText,
   FolderArchive,
+  Info,
   ListChecks,
   Sparkles,
 } from "lucide-react"
@@ -24,6 +25,8 @@ export interface ProjectContext {
   businessType: string
   languages: string[]
 }
+
+const CHECKLIST_STORAGE_KEY = "build-for-global:checklist:v1"
 
 function generatePrompt(selected: SelectedStack, ctx?: ProjectContext): string {
   if (Object.keys(selected).length === 0) return ""
@@ -111,82 +114,27 @@ function generatePrompt(selected: SelectedStack, ctx?: ProjectContext): string {
     const cronOption = TECH_STACKS.find((c) => c.id === "cron")?.options.find((o) => o.id === cronId)
     if (cronOption) {
       lines.push(`使用 **${cronOption.name}** 实现定时任务。`)
-      if (cronId === "qstash") {
-        lines.push("- 在 `app/api/cron/` 目录下创建定时任务处理路由")
-        lines.push("- 使用 `@upstash/qstash` SDK 注册定时任务")
-        lines.push("- 在 `.env.example` 中添加 `QSTASH_TOKEN`、`QSTASH_CURRENT_SIGNING_KEY`、`QSTASH_NEXT_SIGNING_KEY`")
-        lines.push("- 在路由中验证 QStash 签名：`import { verifySignatureAppRouter } from '@upstash/qstash/nextjs'`")
-      } else if (cronId === "github-actions-cron") {
-        lines.push("- 在 `.github/workflows/cron.yml` 中创建 schedule 触发的 workflow")
-        lines.push("- workflow 通过 HTTP 请求调用项目的 API 端点触发任务")
-        lines.push("- API 端点需验证 `CRON_SECRET` 环境变量防止未授权访问")
-      } else if (cronId === "db-cloud-function") {
-        lines.push("- 在 Supabase Dashboard > Database > Extensions 中启用 `pg_cron`")
-        lines.push("- 创建 Supabase Edge Function 处理定时逻辑")
-        lines.push("- 使用 `cron.schedule()` 在数据库层触发 Edge Function")
-      } else if (cronId === "node-cron") {
-        if (useMonorepo) {
-          lines.push("- 在 `apps/server` 使用 `@nestjs/schedule`，用 Cron 装饰器注册定时任务")
-          lines.push("- 不要再写一套 Next.js `app/api/cron`")
-        } else {
-          lines.push("- 在 `lib/cron.ts` 中使用 `node-cron` 或 `bull` 注册定时任务")
-          lines.push("- 在应用启动时初始化 cron 调度器")
-          lines.push("- 注意：仅适用于长时运行服务（Railway / DigitalOcean）")
-        }
-      }
     }
   } else if (cronId === "native-cron" && deployId) {
     lines.push("\n## Cron 定时任务配置\n")
-    if (deployId === "vercel") {
-      lines.push("使用 **Vercel Cron Jobs** 实现定时任务。")
-      lines.push("- 在 `vercel.json` 中配置 crons 字段")
-      lines.push("- 在 `app/api/cron/` 下创建定时任务路由")
-      lines.push("- 路由中验证 `CRON_SECRET` 环境变量")
-    } else if (deployId === "cloudflare") {
-      lines.push("使用 **Cloudflare Cron Triggers** 实现定时任务。")
-      lines.push("- 在 `wrangler.toml` 中配置 `[triggers] crons` 字段")
-      lines.push("- 在 Worker 入口实现 `scheduled()` handler")
-    } else if (deployId === "deno") {
-      lines.push("使用 **Deno.cron()** 实现定时任务。")
-      lines.push("- 在主入口文件中调用 `Deno.cron('task-name', '*/5 * * * *', handler)`")
-    }
+    if (deployId === "vercel") lines.push("使用 **Vercel Cron Jobs**（`vercel.json` + `CRON_SECRET`）。")
+    else if (deployId === "cloudflare") lines.push("使用 **Cloudflare Cron Triggers**（`wrangler.toml` + `scheduled()`）。")
+    else if (deployId === "deno") lines.push("使用 **Deno.cron()**。")
   }
 
   if (wsId) {
     lines.push("\n## WebSocket / 实时通信配置\n")
     const wsOption = TECH_STACKS.find((c) => c.id === "websocket")?.options.find((o) => o.id === wsId)
-    if (wsOption) {
-      lines.push(`使用 **${wsOption.name}** 实现实时通信。`)
-      if (wsId === "supabase-realtime") {
-        lines.push("- 使用 `supabase.channel()` 订阅数据库表变更")
-        lines.push("- 在 `hooks/use-realtime.ts` 封装订阅逻辑")
-      } else if (wsId === "ably") {
-        lines.push("- 在 `.env.example` 中添加 `ABLY_API_KEY`")
-        lines.push("- 创建 `app/api/ably-token/route.ts` 签发客户端令牌")
-      } else if (wsId === "pusher") {
-        lines.push("- 在 `.env.example` 中添加 `PUSHER_APP_ID`、`PUSHER_KEY`、`PUSHER_SECRET`、`NEXT_PUBLIC_PUSHER_KEY`")
-        lines.push("- 创建 `app/api/pusher/auth/route.ts` 处理私有频道认证")
-      } else if (wsId === "sse") {
-        lines.push("- 创建 `app/api/events/route.ts`，使用 `ReadableStream` 发送 SSE 事件")
-      } else if (wsId === "cf-durable-objects") {
-        lines.push("- 创建 Durable Object 类实现 WebSocket 服务端逻辑")
-      } else if (wsId === "native-ws") {
-        if (useMonorepo) {
-          lines.push("- 在 `apps/server` 使用 `@nestjs/websockets` 建 Gateway")
-        } else {
-          lines.push("- 使用 `ws` 或 `Socket.io` 库创建 WebSocket 服务器")
-        }
-      }
-    }
+    if (wsOption) lines.push(`使用 **${wsOption.name}** 实现实时通信。`)
   }
 
   if (dockerId && dockerId !== "no-docker") {
     lines.push("\n## Docker 打包配置\n")
-    if (dockerId === "dockerfile-only") {
-      lines.push("生成 **multi-stage Dockerfile**（`output: 'standalone'` + `node:20-alpine`）。")
-    } else if (dockerId === "docker-compose") {
-      lines.push("生成 **Dockerfile + docker-compose.yml** 完整服务编排。")
-    }
+    lines.push(
+      dockerId === "dockerfile-only"
+        ? "生成 **multi-stage Dockerfile**（`output: 'standalone'` + `node:20-alpine`）。"
+        : "生成 **Dockerfile + docker-compose.yml** 完整服务编排。"
+    )
   }
 
   lines.push("\n## 最佳实践\n")
@@ -231,6 +179,23 @@ export function PromptGenerator({ selected, projectContext }: PromptGeneratorPro
   const [copiedKey, setCopiedKey] = useState<string | null>(null)
   const [checkedItems, setCheckedItems] = useState<Record<string, boolean>>({})
 
+  useEffect(() => {
+    try {
+      const saved = localStorage.getItem(CHECKLIST_STORAGE_KEY)
+      if (saved) setCheckedItems(JSON.parse(saved))
+    } catch {}
+  }, [])
+
+  const toggleChecklistItem = (id: string) => {
+    setCheckedItems((prev) => {
+      const next = { ...prev, [id]: !prev[id] }
+      try {
+        localStorage.setItem(CHECKLIST_STORAGE_KEY, JSON.stringify(next))
+      } catch {}
+      return next
+    })
+  }
+
   const selectedCount = Object.keys(selected).length
   const prompt = useMemo(() => generatePrompt(selected, projectContext), [selected, projectContext])
   const agentsMd = useMemo(() => generateAgentsMd(selected), [selected])
@@ -246,7 +211,12 @@ export function PromptGenerator({ selected, projectContext }: PromptGeneratorPro
   const fileNames = useMemo(() => Object.keys(templateFiles), [templateFiles])
   const [previewFile, setPreviewFile] = useState<string>("package.json")
 
-  const activePreviewFile = fileNames.includes(previewFile) ? previewFile : fileNames[0] ?? "package.json"
+  const activePreviewFile = fileNames.includes(previewFile) ? previewFile : fileNames[0] ?? "README.md"
+
+  const isCustomScaffold =
+    selected["starter"] === "tanstarter" ||
+    selected["starter"] === "fullstack-monorepo" ||
+    selected["deployment"] === "void"
 
   const checklist = useMemo(() => {
     const paymentId = selected["payment"]
@@ -334,21 +304,21 @@ export function PromptGenerator({ selected, projectContext }: PromptGeneratorPro
 
   return (
     <div className="space-y-4">
-      <div className="flex flex-wrap gap-1.5 rounded-xl border border-border bg-secondary/30 p-1.5">
+      <div className="grid grid-cols-2 gap-1.5 rounded-xl border border-border bg-secondary/30 p-1.5 sm:flex sm:flex-wrap">
         {tabs.map((tab) => (
           <button
             key={tab.id}
             type="button"
             onClick={() => setActiveTab(tab.id)}
             className={cn(
-              "inline-flex min-h-9 flex-1 cursor-pointer items-center justify-center gap-1.5 rounded-lg px-3 py-1.5 text-xs font-medium transition-colors sm:flex-none",
+              "inline-flex min-h-9 cursor-pointer items-center justify-center gap-1.5 rounded-lg px-2.5 py-1.5 text-xs font-medium transition-colors sm:px-3",
               activeTab === tab.id
                 ? "bg-primary text-primary-foreground shadow-sm"
                 : "text-muted hover:bg-secondary/60 hover:text-foreground"
             )}
           >
             {tab.icon}
-            {tab.label}
+            <span className="truncate">{tab.label}</span>
           </button>
         ))}
       </div>
@@ -374,7 +344,7 @@ export function PromptGenerator({ selected, projectContext }: PromptGeneratorPro
               <span className="font-mono text-xs text-muted">prompt.md — 贴给 Cursor / Claude Code / v0</span>
               <span className="font-mono text-[11px] text-muted">{prompt.length} chars</span>
             </div>
-            <pre className="max-h-96 overflow-y-auto p-4 font-mono text-xs leading-relaxed text-foreground whitespace-pre-wrap">
+            <pre className="max-h-80 overflow-y-auto p-4 font-mono text-xs leading-relaxed text-foreground whitespace-pre-wrap sm:max-h-96">
               {prompt}
             </pre>
           </div>
@@ -401,7 +371,7 @@ export function PromptGenerator({ selected, projectContext }: PromptGeneratorPro
             <div className="flex items-center justify-between border-b border-border px-4 py-2.5">
               <span className="font-mono text-xs text-muted">AGENTS.md — 放在项目根目录约束 AI 编码风格</span>
             </div>
-            <pre className="max-h-96 overflow-y-auto p-4 font-mono text-xs leading-relaxed text-foreground whitespace-pre-wrap">
+            <pre className="max-h-80 overflow-y-auto p-4 font-mono text-xs leading-relaxed text-foreground whitespace-pre-wrap sm:max-h-96">
               {agentsMd}
             </pre>
           </div>
@@ -410,13 +380,21 @@ export function PromptGenerator({ selected, projectContext }: PromptGeneratorPro
 
       {activeTab === "zip" && (
         <div className="space-y-3">
+          {isCustomScaffold && (
+            <div className="flex items-start gap-2.5 rounded-xl border border-primary/30 bg-primary/10 px-4 py-3 text-xs text-foreground">
+              <Info className="mt-0.5 h-4 w-4 shrink-0 text-primary" />
+              <span>
+                当前路线使用专用脚手架初始化（如 <code className="font-mono">npx tanstarter-cli</code> / Turborepo Monorepo / Void）。本 ZIP 包已为你打包对应的配置文件、<code className="font-mono">.env.example</code>、<code className="font-mono">AGENTS.md</code> 与初始化指南 <code className="font-mono">README.md</code>。
+              </span>
+            </div>
+          )}
           <div className="flex flex-wrap items-center justify-between gap-2">
             <Button type="button" onClick={handleDownloadZip}>
               <FolderArchive className="h-4 w-4" />
               一键打包下载项目 ZIP
             </Button>
             <span className="text-xs text-muted">
-              已包含 package.json、.env.example、AGENTS.md、Webhook 与基础路由
+              共 {fileNames.length} 个文件（含 .env.example 与 AGENTS.md）
             </span>
           </div>
           <div className="grid overflow-hidden rounded-xl border border-border bg-card md:grid-cols-12">
@@ -424,7 +402,7 @@ export function PromptGenerator({ selected, projectContext }: PromptGeneratorPro
               <p className="px-2 py-1.5 text-[11px] font-medium uppercase tracking-wider text-muted">
                 生成文件列表
               </p>
-              <ul className="max-h-80 space-y-0.5 overflow-y-auto">
+              <ul className="max-h-48 space-y-0.5 overflow-y-auto md:max-h-80">
                 {fileNames.map((file) => (
                   <li key={file}>
                     <button
@@ -446,17 +424,17 @@ export function PromptGenerator({ selected, projectContext }: PromptGeneratorPro
             </div>
             <div className="md:col-span-8">
               <div className="flex items-center justify-between border-b border-border px-4 py-2">
-                <span className="font-mono text-xs text-foreground">{activePreviewFile}</span>
+                <span className="font-mono text-xs text-foreground truncate">{activePreviewFile}</span>
                 <button
                   type="button"
                   onClick={() => handleCopy("file", templateFiles[activePreviewFile] ?? "")}
-                  className="inline-flex items-center gap-1 text-xs text-muted hover:text-foreground"
+                  className="inline-flex shrink-0 items-center gap-1 text-xs text-muted hover:text-foreground"
                 >
                   {copiedKey === "file" ? <Check className="h-3.5 w-3.5 text-primary" /> : <Copy className="h-3.5 w-3.5" />}
                   {copiedKey === "file" ? "已复制" : "复制文件"}
                 </button>
               </div>
-              <pre className="max-h-80 overflow-auto p-4 font-mono text-xs leading-relaxed text-foreground">
+              <pre className="max-h-64 overflow-auto p-4 font-mono text-xs leading-relaxed text-foreground md:max-h-80">
                 {templateFiles[activePreviewFile]}
               </pre>
             </div>
@@ -467,7 +445,7 @@ export function PromptGenerator({ selected, projectContext }: PromptGeneratorPro
       {activeTab === "checklist" && (
         <div className="space-y-3">
           <div className="flex items-center justify-between rounded-xl border border-border bg-secondary/20 px-4 py-3">
-            <span className="text-xs font-medium text-foreground">出海上线前核对进度</span>
+            <span className="text-xs font-medium text-foreground">出海上线前核对进度（自动保存）</span>
             <span className="font-mono text-xs text-primary">
               {completedChecklistCount} / {checklist.length} 完成
             </span>
@@ -483,9 +461,7 @@ export function PromptGenerator({ selected, projectContext }: PromptGeneratorPro
                   <input
                     type="checkbox"
                     checked={checked}
-                    onChange={() =>
-                      setCheckedItems((prev) => ({ ...prev, [item.id]: !prev[item.id] }))
-                    }
+                    onChange={() => toggleChecklistItem(item.id)}
                     className="mt-1 h-4 w-4 rounded border-border accent-primary"
                   />
                   <div className="space-y-1">

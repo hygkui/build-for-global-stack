@@ -95,9 +95,46 @@ export function ChinaGlobalGuide() {
           </p>
         </div>
 
-        <div className="overflow-hidden rounded-xl border border-border bg-card/60">
+        {/* 移动端卡片布局 */}
+        <div className="grid gap-3 md:hidden">
+          {PAYMENT_ROWS.map((row) => (
+            <div key={row.name} className="rounded-xl border border-border bg-card/70 p-4 space-y-2.5">
+              <div className="flex items-center justify-between">
+                <a
+                  href={row.doc}
+                  target="_blank"
+                  rel="noreferrer"
+                  className="inline-flex items-center gap-1 text-base font-bold text-foreground hover:text-primary"
+                >
+                  {row.name}
+                  <ArrowUpRight className="h-3.5 w-3.5 text-muted" />
+                </a>
+                <span className="rounded-md bg-secondary px-2 py-0.5 text-xs text-muted">{row.type}</span>
+              </div>
+              <div className="flex items-center gap-1.5 text-xs">
+                {row.status === "recommended" ? (
+                  <CheckCircle2 className="h-4 w-4 shrink-0 text-primary" />
+                ) : (
+                  <AlertCircle
+                    className={`h-4 w-4 shrink-0 ${
+                      row.status === "conditional" ? "text-yellow-500" : "text-destructive"
+                    }`}
+                  />
+                )}
+                <span className={row.status === "recommended" ? "font-medium text-foreground" : "text-muted"}>
+                  {row.mainlandSupport}
+                </span>
+              </div>
+              <p className="text-xs text-muted">税务：{row.tax}</p>
+              <p className="text-xs text-muted">适用：{row.fit}</p>
+            </div>
+          ))}
+        </div>
+
+        {/* 桌面端表格 */}
+        <div className="hidden overflow-hidden rounded-xl border border-border bg-card/60 md:block">
           <div className="overflow-x-auto">
-            <table className="w-full min-w-[680px] text-left text-sm">
+            <table className="w-full text-left text-sm">
               <thead className="border-b border-border bg-secondary/40 text-xs uppercase tracking-wider text-muted">
                 <tr>
                   <th className="px-4 py-3.5 font-medium">收款方案</th>
