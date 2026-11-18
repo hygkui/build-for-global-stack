@@ -1,20 +1,15 @@
 import type { Metadata, Viewport } from "next"
-import { DM_Sans, Space_Grotesk, JetBrains_Mono } from "next/font/google"
 import { Navbar } from "@/components/navbar"
 import "./globals.css"
 
-const dmSans = DM_Sans({ subsets: ["latin"], variable: "--font-dm-sans" })
-const spaceGrotesk = Space_Grotesk({ subsets: ["latin"], variable: "--font-space-grotesk" })
-const jetbrainsMono = JetBrains_Mono({ subsets: ["latin"], variable: "--font-jetbrains-mono" })
-
 export const metadata: Metadata = {
-  title: "出海黄金组合 - 快速构建出海 MVP",
+  title: "出海黄金组合 - 面向中国创业者的全球化建站工作台",
   description:
-    "按目标推荐出海技术栈，生成可以直接交给 AI 编程工具的提示词。",
-  keywords: ["出海", "SaaS", "技术栈", "MVP", "Vercel", "Cloudflare"],
+    "为中国出海独立开发者与外贸/SaaS 团队打造：按阶段推荐技术栈，检测兼容性，一键生成 AI 提示词、AGENTS.md 规范与可运行项目 ZIP。",
+  keywords: ["出海", "SaaS", "独立站", "技术栈", "MVP", "Vercel", "Cloudflare", "Creem", "出海收款"],
   openGraph: {
-    title: "出海黄金组合",
-    description: "快速构建面向全球市场的 MVP 产品",
+    title: "出海黄金组合 - 全球化建站工作台",
+    description: "选定阶段、确认技术栈、导出可运行项目代码与 AI 开发规范",
     type: "website",
   },
 }
@@ -27,10 +22,8 @@ export const viewport: Viewport = {
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
-    <html lang="zh-CN" className="dark" suppressHydrationWarning>
-      <body
-        className={`${dmSans.variable} ${spaceGrotesk.variable} ${jetbrainsMono.variable} font-sans min-h-screen bg-background text-foreground`}
-      >
+    <html lang="zh-CN" className="dark scroll-smooth" suppressHydrationWarning>
+      <body className="font-sans min-h-screen bg-background text-foreground selection:bg-primary/25 selection:text-foreground">
         <Navbar />
         {children}
       </body>

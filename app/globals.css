@@ -4,24 +4,28 @@
 
 @layer base {
   :root {
-    /* 深色代码台：底色压暗，绿色只留给当前步骤和主操作 */
+    --font-dm-sans: "Inter", "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", system-ui, -apple-system, sans-serif;
+    --font-space-grotesk: "Inter", "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", system-ui, -apple-system, sans-serif;
+    --font-jetbrains-mono: "JetBrains Mono", "SF Mono", "Fira Code", ui-monospace, SFMono-Regular, Menlo, monospace;
+
+    /* 深色工作台：底色沉稳，翡翠绿只留给主操作与当前状态 */
     --background: 222 47% 6%;
     --foreground: 210 40% 98%;
 
-    --card: 222 40% 10%;
+    --card: 222 38% 9%;
     --card-foreground: 210 40% 98%;
 
-    --popover: 222 40% 10%;
+    --popover: 222 38% 10%;
     --popover-foreground: 210 40% 98%;
 
     --primary: 142 71% 45%;
     --primary-foreground: 222 47% 6%;
 
-    --secondary: 217 33% 16%;
+    --secondary: 217 33% 15%;
     --secondary-foreground: 210 40% 98%;
 
-    --muted: 215 16% 72%;
-    --muted-foreground: 215 16% 72%;
+    --muted: 215 16% 68%;
+    --muted-foreground: 215 16% 68%;
 
     --muted-bg: 217 33% 14%;
 
@@ -31,19 +35,11 @@
     --destructive: 0 84% 60%;
     --destructive-foreground: 210 40% 98%;
 
-    --border: 215 25% 22%;
+    --border: 215 24% 19%;
     --input: 217 33% 16%;
     --ring: 142 71% 45%;
 
     --radius: 0.75rem;
-
-    /* 自定义品牌色 */
-    --brand-green: 142 76% 48%;
-    --brand-green-dim: 142 76% 38%;
-    --brand-surface: 220 20% 9%;
-    --brand-surface-hover: 220 20% 12%;
-    --brand-border: 220 20% 16%;
-    --brand-text-muted: 215 20% 55%;
   }
 }
 
@@ -61,10 +57,19 @@
   }
 }
 
+/* 微妙的工程网格背景 */
+.bg-studio-grid {
+  background-image:
+    radial-gradient(ellipse 80% 50% at 50% -10%, hsla(142, 71%, 45%, 0.14), transparent 70%),
+    linear-gradient(to right, hsla(215, 25%, 24%, 0.16) 1px, transparent 1px),
+    linear-gradient(to bottom, hsla(215, 25%, 24%, 0.16) 1px, transparent 1px);
+  background-size: 100% 100%, 40px 40px, 40px 40px;
+}
+
 /* 渐变文字 */
 .gradient-text {
   @apply bg-clip-text text-transparent;
-  background-image: linear-gradient(135deg, hsl(142, 76%, 58%) 0%, hsl(160, 70%, 50%) 100%);
+  background-image: linear-gradient(135deg, hsl(142, 76%, 58%) 0%, hsl(168, 75%, 52%) 100%);
 }
 
 @media (prefers-reduced-motion: reduce) {

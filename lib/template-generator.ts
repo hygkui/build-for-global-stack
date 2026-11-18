@@ -3,17 +3,44 @@
  * 返回一个 Record<文件路径, 文件内容> 的 Map 用于 ZIP 打包
  */
 
+import { generateAgentsMd } from "@/lib/agents-md"
+
 export type TechStack = Record<string, string>
 
-export function generateTemplateFiles(techStack: TechStack): Record<string, string> {
+export interface TemplateOptions {
+  projectName?: string
+  businessType?: string
+  languages?: string[]
+}
+
+function sanitizeSlug(name?: string): string {
+  const cleaned = (name ?? "my-global-saas")
+    .trim()
+    .toLowerCase()
+    .replace(/[^a-z0-9-_]+/g, "-")
+    .replace(/^-+|-+$/g, "")
+  return cleaned || "my-global-saas"
+}
+
+export function generateTemplateFiles(
+  techStack: TechStack,
+  options: TemplateOptions = {}
+): Record<string, string> {
+  const projectSlug = sanitizeSlug(options.projectName)
+  const displayName = options.projectName?.trim() || "My Global SaaS"
+  const businessType = options.businessType?.trim() || "SaaS 订阅产品"
+  const languages = options.languages?.length ? options.languages : ["en", "zh"]
+
   const deploy = techStack["deployment"] ?? "vercel"
   const db = techStack["database"] ?? "neon"
-  const auth = techStack["auth"] ?? "neon-auth"
-  const payment = techStack["payment"] ?? "stripe"
+  const orm = techStack["orm"] ?? "drizzle"
+  const auth = techStack["auth"] ?? "better-auth"
+  const payment = techStack["payment"] ?? "creem"
   const i18n = techStack["i18n"]
   const cron = techStack["cron"]
   const ws = techStack["websocket"]
   const docker = techStack["docker"]
+  const email = techStack["email"]
 
   const files: Record<string, string> = {}
 
@@ -48,6 +75,14 @@ export function generateTemplateFiles(techStack: TechStack): Record<string, stri
     deps["@planetscale/database"] = "^1.19.0"
   }
 
+  if (orm === "drizzle") {
+    deps["drizzle-orm"] = "^0.40.0"
+    devDeps["drizzle-kit"] = "^0.30.0"
+  } else if (orm === "prisma") {
+    deps["@prisma/client"] = "^6.4.0"
+    devDeps["prisma"] = "^6.4.0"
+  }
+
   if (auth === "neon-auth") {
     deps["@neondatabase/auth"] = "0.2.0-beta.1"
     deps["server-only"] = "^0.0.1"
@@ -57,6 +92,8 @@ export function generateTemplateFiles(techStack: TechStack): Record<string, stri
     deps["@clerk/nextjs"] = "^6.10.0"
   } else if (auth === "better-auth") {
     deps["better-auth"] = "^1.2.7"
+  } else if (auth === "auth-js") {
+    deps["next-auth"] = "^5.0.0-beta.25"
   }
 
   if (payment === "stripe") {
@@ -65,6 +102,10 @@ export function generateTemplateFiles(techStack: TechStack): Record<string, stri
     deps["@stripe/react-stripe-js"] = "^3.1.0"
   } else if (payment === "lemonsqueezy") {
     deps["@lemonsqueezy/lemonsqueezy.js"] = "^3.3.1"
+  }
+
+  if (email === "resend") {
+    deps["resend"] = "^4.1.2"
   }
 
   if (i18n === "next-intl") {
@@ -91,7 +132,7 @@ export function generateTemplateFiles(techStack: TechStack): Record<string, stri
 
   files["package.json"] = JSON.stringify(
     {
-      name: "my-saas-app",
+      name: projectSlug,
       version: "0.1.0",
       private: true,
       scripts: {
@@ -114,7 +155,12 @@ export function generateTemplateFiles(techStack: TechStack): Record<string, stri
     "",
   ]
 
-  if (auth === "neon-auth") {
+  if (auth === "better-auth") {
+    envLines.push("# ── Better Auth ───────────────────────────────────────────────────")
+    envLines.push("BETTER_AUTH_SECRET=  # openssl rand -base64 32")
+    envLines.push("BETTER_AUTH_URL=http://localhost:3000")
+    envLines.push("")
+  } else if (auth === "neon-auth") {
     envLines.push("# ── Neon Auth ──────────────────────────────────────────────────────")
     envLines.push("NEON_AUTH_BASE_URL=")
     envLines.push("NEON_AUTH_COOKIE_SECRET=  # openssl rand -base64 32")
@@ -132,7 +178,17 @@ export function generateTemplateFiles(techStack: TechStack): Record<string, stri
     envLines.push("")
   }
 
-  if (payment === "stripe") {
+  if (payment === "creem") {
+    envLines.push("# ── Creem (Merchant of Record，适合无海外公司卖家) ────────────────")
+    envLines.push("CREEM_API_KEY=")
+    envLines.push("CREEM_WEBHOOK_SECRET=")
+    envLines.push("")
+  } else if (payment === "waffo") {
+    envLines.push("# ── Waffo (Merchant of Record，支持打款至大陆) ────────────────────")
+    envLines.push("WAFFO_API_KEY=")
+    envLines.push("WAFFO_WEBHOOK_SECRET=")
+    envLines.push("")
+  } else if (payment === "stripe") {
     envLines.push("# ── Stripe ────────────────────────────────────────────────────────")
     envLines.push("STRIPE_SECRET_KEY=")
     envLines.push("NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY=")
@@ -142,6 +198,12 @@ export function generateTemplateFiles(techStack: TechStack): Record<string, stri
     envLines.push("# ── Lemon Squeezy ────────────────────────────────────────────────")
     envLines.push("LEMONSQUEEZY_API_KEY=")
     envLines.push("LEMONSQUEEZY_WEBHOOK_SECRET=")
+    envLines.push("")
+  }
+
+  if (email === "resend") {
+    envLines.push("# ── Resend 邮件服务 ────────────────────────────────────────────────")
+    envLines.push("RESEND_API_KEY=")
     envLines.push("")
   }
 
@@ -328,7 +390,15 @@ export const config = {
 
   // ── lib/db.ts ──────────────────────────────────────────────────────────
   if (db === "neon" || db === "neon-serverless") {
-    files["lib/db.ts"] = `import { neon } from "@neondatabase/serverless"
+    files["lib/db.ts"] = orm === "drizzle"
+      ? `import { neon } from "@neondatabase/serverless"
+import { drizzle } from "drizzle-orm/neon-http"
+
+const sql = neon(process.env.DATABASE_URL!)
+export const db = drizzle(sql)
+export { sql }
+`
+      : `import { neon } from "@neondatabase/serverless"
 
 const sql = neon(process.env.DATABASE_URL!)
 
@@ -345,7 +415,30 @@ export const supabase = createClient(
   }
 
   // ── lib/auth/server.ts ──────────────────────────────────────────────────
-  if (auth === "neon-auth") {
+  if (auth === "better-auth") {
+    files["lib/auth/server.ts"] = `import { betterAuth } from "better-auth"
+
+export const auth = betterAuth({
+  emailAndPassword: {
+    enabled: true,
+  },
+  // TODO: Wire your Drizzle / Postgres adapter here
+})
+`
+    files["lib/auth/client.ts"] = `"use client"
+
+import { createAuthClient } from "better-auth/react"
+
+export const authClient = createAuthClient({
+  baseURL: process.env.NEXT_PUBLIC_APP_URL,
+})
+`
+    files["app/api/auth/[...all]/route.ts"] = `import { auth } from "@/lib/auth/server"
+import { toNextJsHandler } from "better-auth/next-js"
+
+export const { POST, GET } = toNextJsHandler(auth)
+`
+  } else if (auth === "neon-auth") {
     files["lib/auth/server.ts"] = `import { createNeonAuth } from "@neondatabase/auth/next/server"
 
 export const auth = createNeonAuth({
@@ -367,8 +460,45 @@ export { auth }
 `
   }
 
-  // ── lib/stripe.ts ──────────────────────────────────────────────────────
-  if (payment === "stripe") {
+  // ── Payment webhooks ───────────────────────────────────────────────────
+  if (payment === "creem") {
+    files["app/api/webhooks/creem/route.ts"] = `import { NextRequest, NextResponse } from "next/server"
+import crypto from "crypto"
+
+export async function POST(req: NextRequest) {
+  const body = await req.text()
+  const signature = req.headers.get("creem-signature")
+  const secret = process.env.CREEM_WEBHOOK_SECRET
+
+  if (!signature || !secret) {
+    return NextResponse.json({ error: "Missing signature or secret" }, { status: 400 })
+  }
+
+  const expected = crypto.createHmac("sha256", secret).update(body).digest("hex")
+  if (signature !== expected) {
+    return NextResponse.json({ error: "Invalid signature" }, { status: 400 })
+  }
+
+  const event = JSON.parse(body)
+  if (event.eventType === "checkout.completed" || event.eventType === "subscription.active") {
+    // TODO: Grant user entitlement in database
+    console.log("Creem payment verified:", event.object?.id)
+  }
+
+  return NextResponse.json({ ok: true })
+}
+`
+  } else if (payment === "waffo") {
+    files["app/api/webhooks/waffo/route.ts"] = `import { NextRequest, NextResponse } from "next/server"
+
+export async function POST(req: NextRequest) {
+  const body = await req.json()
+  // TODO: Verify Waffo webhook signature using WAFFO_WEBHOOK_SECRET
+  console.log("Waffo webhook received:", body?.event)
+  return NextResponse.json({ ok: true })
+}
+`
+  } else if (payment === "stripe") {
     files["lib/stripe.ts"] = `import "server-only"
 import Stripe from "stripe"
 
@@ -376,11 +506,37 @@ export const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, {
   apiVersion: "2025-03-31.basil",
 })
 `
+    files["app/api/webhooks/stripe/route.ts"] = `import { NextRequest, NextResponse } from "next/server"
+import { stripe } from "@/lib/stripe"
+
+export async function POST(req: NextRequest) {
+  const body = await req.text()
+  const sig = req.headers.get("stripe-signature")
+
+  if (!sig) {
+    return NextResponse.json({ error: "Missing stripe-signature" }, { status: 400 })
+  }
+
+  let event
+  try {
+    event = stripe.webhooks.constructEvent(body, sig, process.env.STRIPE_WEBHOOK_SECRET!)
+  } catch {
+    return NextResponse.json({ error: "Webhook signature invalid" }, { status: 400 })
+  }
+
+  if (event.type === "checkout.session.completed") {
+    const session = event.data.object
+    console.log("Payment completed:", session.id)
+    // TODO: Update your database order status here
+  }
+
+  return NextResponse.json({ ok: true })
+}
+`
   }
 
   // ── app/layout.tsx ──────────────────────────────────────────────────────
-  const layoutImports: string[] = ['import type { Metadata } from "next"', 'import { Inter } from "next/font/google"', 'import "./globals.css"']
-  const layoutSetup: string[] = ['const inter = Inter({ subsets: ["latin"] })']
+  const layoutImports: string[] = ['import type { Metadata } from "next"', 'import "./globals.css"']
   let layoutProviderOpen = ""
   let layoutProviderClose = ""
 
@@ -397,17 +553,15 @@ export const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, {
 
   files["app/layout.tsx"] = `${layoutImports.join("\n")}
 
-${layoutSetup.join("\n")}
-
 export const metadata: Metadata = {
-  title: "My SaaS App",
-  description: "Built with the Golden Combo for Global SaaS",
+  title: "${displayName}",
+  description: "${businessType} — Built for Global Customers",
 }
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
-    <html lang="en">
-      <body className={inter.className}>
+    <html lang="${languages[0] ?? "en"}">
+      <body className="antialiased">
 ${layoutProviderOpen ? layoutProviderOpen + "\n          {children}\n" + layoutProviderClose : "        {children}"}
       </body>
     </html>
@@ -418,13 +572,19 @@ ${layoutProviderOpen ? layoutProviderOpen + "\n          {children}\n" + layoutP
   // ── app/page.tsx ────────────────────────────────────────────────────────
   files["app/page.tsx"] = `export default function HomePage() {
   return (
-    <main className="min-h-screen flex items-center justify-center">
-      <div className="text-center">
-        <h1 className="text-4xl font-bold mb-4">Welcome to My SaaS App</h1>
+    <main className="min-h-screen flex items-center justify-center p-6">
+      <div className="max-w-xl text-center">
+        <span className="inline-block rounded-full border px-3 py-1 text-xs font-medium mb-4">
+          ${businessType} · Languages: ${languages.join(", ")}
+        </span>
+        <h1 className="text-4xl font-bold mb-4">${displayName}</h1>
         <p className="text-muted-foreground mb-8">
-          Built with Next.js${db === "neon" || db === "neon-serverless" ? " + Neon" : db === "supabase" ? " + Supabase" : ""}${payment === "stripe" ? " + Stripe" : ""}
+          Built with Next.js${db ? ` + ${db}` : ""}${payment ? ` + ${payment}` : ""}
         </p>
-        <a href="/dashboard" className="inline-flex items-center justify-center rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground hover:bg-primary/90">
+        <a
+          href="/dashboard"
+          className="inline-flex items-center justify-center rounded-md bg-primary px-5 py-2.5 text-sm font-medium text-primary-foreground hover:bg-primary/90"
+        >
           Get Started
         </a>
       </div>
@@ -456,8 +616,8 @@ export default async function DashboardPage() {
     files["app/dashboard/page.tsx"] = `export default function DashboardPage() {
   return (
     <main className="container mx-auto p-8">
-      <h1 className="text-3xl font-bold mb-2">Dashboard</h1>
-      <p className="text-muted-foreground">You are logged in.</p>
+      <h1 className="text-3xl font-bold mb-2">${displayName} Dashboard</h1>
+      <p className="text-muted-foreground">Ready for global customers.</p>
     </main>
   )
 }
@@ -514,51 +674,17 @@ export const { GET, POST } = auth.handler()
 `
   }
 
-  // ── Stripe webhook ──────────────────────────────────────────────────────
-  if (payment === "stripe") {
-    files["app/api/webhooks/stripe/route.ts"] = `import { NextRequest, NextResponse } from "next/server"
-import { stripe } from "@/lib/stripe"
-
-export async function POST(req: NextRequest) {
-  const body = await req.text()
-  const sig = req.headers.get("stripe-signature")
-
-  if (!sig) {
-    return NextResponse.json({ error: "Missing stripe-signature" }, { status: 400 })
-  }
-
-  let event
-  try {
-    event = stripe.webhooks.constructEvent(body, sig, process.env.STRIPE_WEBHOOK_SECRET!)
-  } catch {
-    return NextResponse.json({ error: "Webhook signature invalid" }, { status: 400 })
-  }
-
-  if (event.type === "checkout.session.completed") {
-    const session = event.data.object
-    console.log("Payment completed:", session.id)
-    // TODO: Update your database order status here
-  }
-
-  return NextResponse.json({ ok: true })
-}
-`
-  }
-
   // ── Cron handler ────────────────────────────────────────────────────────
   if (cron === "native-cron" || cron === "qstash") {
     files["app/api/cron/daily/route.ts"] = `import { NextRequest, NextResponse } from "next/server"
 
 export async function GET(req: NextRequest) {
-  // Verify the request comes from the cron scheduler
   const authHeader = req.headers.get("authorization")
   if (authHeader !== \`Bearer \${process.env.CRON_SECRET}\`) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
   }
 
-  // TODO: Add your cron job logic here
   console.log("Daily cron job executed at", new Date().toISOString())
-
   return NextResponse.json({ ok: true, timestamp: new Date().toISOString() })
 }
 `
@@ -571,16 +697,11 @@ export async function GET(req: NextRequest) {
 
   const stream = new ReadableStream({
     start(controller) {
-      // Send initial connection message
       controller.enqueue(encoder.encode("data: connected\\n\\n"))
-
-      // TODO: Add your real-time event logic here
       const interval = setInterval(() => {
         const data = JSON.stringify({ timestamp: new Date().toISOString() })
         controller.enqueue(encoder.encode(\`data: \${data}\\n\\n\`))
       }, 5000)
-
-      // Cleanup on close
       return () => clearInterval(interval)
     },
   })
@@ -600,14 +721,12 @@ export async function GET(req: NextRequest) {
   if (docker === "dockerfile-only" || docker === "docker-compose") {
     files["Dockerfile"] = `FROM node:20-alpine AS base
 
-# Install dependencies only when needed
 FROM base AS deps
 RUN apk add --no-cache libc6-compat
 WORKDIR /app
 COPY package.json pnpm-lock.yaml* ./
 RUN corepack enable pnpm && pnpm i --frozen-lockfile
 
-# Rebuild the source code only when needed
 FROM base AS builder
 WORKDIR /app
 COPY --from=deps /app/node_modules ./node_modules
@@ -615,7 +734,6 @@ COPY . .
 ENV NEXT_TELEMETRY_DISABLED=1
 RUN corepack enable pnpm && pnpm run build
 
-# Production image, copy all the files and run next
 FROM base AS runner
 WORKDIR /app
 ENV NODE_ENV=production
@@ -652,29 +770,18 @@ npm-debug.log
       - DATABASE_URL=\${DATABASE_URL}
       - NODE_ENV=production
     restart: unless-stopped
-
-  # Uncomment if you need a local database
-  # db:
-  #   image: postgres:16-alpine
-  #   environment:
-  #     POSTGRES_DB: myapp
-  #     POSTGRES_USER: postgres
-  #     POSTGRES_PASSWORD: postgres
-  #   ports:
-  #     - "5432:5432"
-  #   volumes:
-  #     - postgres_data:/var/lib/postgresql/data
-
-# volumes:
-#   postgres_data:
 `
   }
 
+  // ── AGENTS.md ───────────────────────────────────────────────────────────
+  files["AGENTS.md"] = generateAgentsMd(techStack)
+
   // ── README.md ────────────────────────────────────────────────────────────
   const readmeLines: string[] = [
-    "# My SaaS App",
+    `# ${displayName}`,
     "",
-    "> Generated by [出海黄金组合](https://build-for-global.vercel.app)",
+    `> ${businessType} · Target Languages: ${languages.join(", ")}`,
+    "> Generated by [出海黄金组合](https://github.com/hygkui/build-for-global)",
     "",
     "## Tech Stack",
     "",
@@ -683,8 +790,10 @@ npm-debug.log
   const stackLabels: Record<string, string> = {
     deployment: "Deployment",
     database: "Database",
+    orm: "ORM",
     auth: "Auth",
     payment: "Payment",
+    email: "Email",
     i18n: "i18n",
     cron: "Cron",
     websocket: "WebSocket",
@@ -711,6 +820,10 @@ npm-debug.log
     "   pnpm dev",
     "   ```",
     "4. Open [http://localhost:3000](http://localhost:3000)",
+    "",
+    "## AI Collaboration",
+    "",
+    "See `AGENTS.md` for coding standards, i18n rules, and deployment constraints.",
     "",
     "## Deploy",
     ""
