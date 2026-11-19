@@ -339,12 +339,12 @@ export function PromptGenerator({ selected, projectContext }: PromptGeneratorPro
               下载 prompt.md
             </Button>
           </div>
-          <div className="rounded-xl border border-border bg-card">
-            <div className="flex items-center justify-between border-b border-border px-4 py-2.5">
-              <span className="font-mono text-xs text-muted">prompt.md — 贴给 Cursor / Claude Code / v0</span>
-              <span className="font-mono text-[11px] text-muted">{prompt.length} chars</span>
+          <div className="overflow-hidden rounded-xl border border-slate-800 bg-slate-950 text-slate-100">
+            <div className="flex items-center justify-between border-b border-slate-800 bg-slate-900/70 px-4 py-2.5">
+              <span className="font-mono text-xs text-slate-400">prompt.md — 贴给 Cursor / Claude Code / v0</span>
+              <span className="font-mono text-[11px] text-slate-400">{prompt.length} chars</span>
             </div>
-            <pre className="max-h-80 overflow-y-auto p-4 font-mono text-xs leading-relaxed text-foreground whitespace-pre-wrap sm:max-h-96">
+            <pre className="max-h-80 overflow-y-auto p-4 font-mono text-xs leading-relaxed text-slate-100 whitespace-pre-wrap sm:max-h-96">
               {prompt}
             </pre>
           </div>
@@ -367,11 +367,11 @@ export function PromptGenerator({ selected, projectContext }: PromptGeneratorPro
               下载 AGENTS.md
             </Button>
           </div>
-          <div className="rounded-xl border border-border bg-card">
-            <div className="flex items-center justify-between border-b border-border px-4 py-2.5">
-              <span className="font-mono text-xs text-muted">AGENTS.md — 放在项目根目录约束 AI 编码风格</span>
+          <div className="overflow-hidden rounded-xl border border-slate-800 bg-slate-950 text-slate-100">
+            <div className="flex items-center justify-between border-b border-slate-800 bg-slate-900/70 px-4 py-2.5">
+              <span className="font-mono text-xs text-slate-400">AGENTS.md — 放在项目根目录约束 AI 编码风格</span>
             </div>
-            <pre className="max-h-80 overflow-y-auto p-4 font-mono text-xs leading-relaxed text-foreground whitespace-pre-wrap sm:max-h-96">
+            <pre className="max-h-80 overflow-y-auto p-4 font-mono text-xs leading-relaxed text-slate-100 whitespace-pre-wrap sm:max-h-96">
               {agentsMd}
             </pre>
           </div>
@@ -422,19 +422,19 @@ export function PromptGenerator({ selected, projectContext }: PromptGeneratorPro
                 ))}
               </ul>
             </div>
-            <div className="min-w-0 md:col-span-8">
-              <div className="flex items-center justify-between border-b border-border px-4 py-2">
-                <span className="font-mono text-xs text-foreground truncate">{activePreviewFile}</span>
+            <div className="min-w-0 bg-slate-950 text-slate-100 md:col-span-8">
+              <div className="flex items-center justify-between border-b border-slate-800 bg-slate-900/70 px-4 py-2">
+                <span className="font-mono text-xs text-slate-200 truncate">{activePreviewFile}</span>
                 <button
                   type="button"
                   onClick={() => handleCopy("file", templateFiles[activePreviewFile] ?? "")}
-                  className="inline-flex shrink-0 items-center gap-1 text-xs text-muted hover:text-foreground"
+                  className="inline-flex shrink-0 items-center gap-1 text-xs text-slate-400 hover:text-slate-100"
                 >
-                  {copiedKey === "file" ? <Check className="h-3.5 w-3.5 text-primary" /> : <Copy className="h-3.5 w-3.5" />}
+                  {copiedKey === "file" ? <Check className="h-3.5 w-3.5 text-emerald-400" /> : <Copy className="h-3.5 w-3.5" />}
                   {copiedKey === "file" ? "已复制" : "复制文件"}
                 </button>
               </div>
-              <pre className="max-h-64 overflow-auto p-4 font-mono text-xs leading-relaxed text-foreground md:max-h-80">
+              <pre className="max-h-64 overflow-auto p-4 font-mono text-xs leading-relaxed text-slate-100 md:max-h-80">
                 {templateFiles[activePreviewFile]}
               </pre>
             </div>

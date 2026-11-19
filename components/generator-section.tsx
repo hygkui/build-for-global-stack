@@ -27,19 +27,19 @@ import { cn } from "@/lib/utils"
 
 const STEPS = [
   {
-    shortTitle: "选阶段",
-    title: "选定阶段与项目信息",
-    hint: "先选当前阶段，再填项目名称与目标语言，后续提示词和代码包会自动匹配。",
+    shortTitle: "定方向",
+    title: "定方向与项目",
+    hint: "先选业务阶段并填写项目名称与目标语言，后续提示词和代码包会自动匹配。",
   },
   {
-    shortTitle: "调技术栈",
-    title: "确认与微调技术栈",
-    hint: "这一层已经配好。可点开官方文档核对，或按需替换其中几项。",
+    shortTitle: "调组合",
+    title: "确认黄金组合",
+    hint: "已帮你避开不兼容组合。可点开官方文档核对，或按需替换其中几项。",
   },
   {
-    shortTitle: "导出",
-    title: "导出代码、规范与清单",
-    hint: "复制给 Cursor / Claude Code，或直接下载可运行项目 ZIP。",
+    shortTitle: "带走代码",
+    title: "带走代码与清单",
+    hint: "复制给 Cursor / Claude Code，或直接下载可运行项目 ZIP 开工。",
   },
 ]
 
@@ -311,9 +311,9 @@ export function GeneratorSection() {
             存在兼容冲突
           </span>
         ) : (
-          <span className="inline-flex items-center gap-1 rounded-full bg-primary/15 px-2 py-0.5 text-[11px] font-medium text-primary">
+          <span className="inline-flex items-center gap-1 rounded-full bg-emerald-500/15 px-2 py-0.5 text-[11px] font-medium text-emerald-700 dark:text-emerald-400">
             <ShieldCheck className="h-3 w-3" />
-            兼容已校验
+            配置兼容
           </span>
         )}
       </div>
@@ -599,9 +599,9 @@ export function GeneratorSection() {
                   存在兼容冲突
                 </span>
               ) : (
-                <span className="inline-flex items-center gap-1 rounded-full bg-primary/15 px-2.5 py-0.5 text-xs font-medium text-primary">
+                <span className="inline-flex items-center gap-1 rounded-full bg-emerald-500/15 px-2.5 py-0.5 text-xs font-medium text-emerald-700 dark:text-emerald-400">
                   <ShieldCheck className="h-3.5 w-3.5" />
-                  兼容已校验
+                  配置兼容
                 </span>
               )}
             </div>
@@ -645,7 +645,7 @@ export function GeneratorSection() {
             <div className="space-y-2">
               {step < 2 && (
                 <Button type="button" className="w-full" onClick={() => goTo(2)} disabled={!canAdvance}>
-                  直接生成代码与提示词
+                  一键生成项目包
                 </Button>
               )}
               <Button

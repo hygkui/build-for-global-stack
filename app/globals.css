@@ -8,8 +8,8 @@
     --font-space-grotesk: "Inter", "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", system-ui, -apple-system, sans-serif;
     --font-jetbrains-mono: "JetBrains Mono", "SF Mono", "Fira Code", ui-monospace, SFMono-Regular, Menlo, monospace;
 
-    /* 浅色主题 */
-    --background: 210 20% 98%;
+    /* 方案 A：浅色清爽工作台默认 + 深海蓝主色 + 语义绿状态 */
+    --background: 210 40% 98%;
     --foreground: 222 47% 11%;
 
     --card: 0 0% 100%;
@@ -18,35 +18,32 @@
     --popover: 0 0% 100%;
     --popover-foreground: 222 47% 11%;
 
-    --primary: 142 71% 36%;
+    --primary: 221 83% 53%;
     --primary-foreground: 0 0% 100%;
 
-    --secondary: 214 25% 93%;
+    --secondary: 214 32% 94%;
     --secondary-foreground: 222 47% 11%;
 
-    --muted: 215 16% 42%;
-    --muted-foreground: 215 16% 42%;
+    --muted: 215 16% 43%;
+    --muted-foreground: 215 16% 43%;
 
-    --muted-bg: 214 25% 94%;
+    --muted-bg: 214 32% 95%;
 
-    --accent: 142 71% 36%;
+    --accent: 221 83% 53%;
     --accent-foreground: 0 0% 100%;
 
     --destructive: 0 78% 52%;
     --destructive-foreground: 0 0% 100%;
 
-    --warning: 38 92% 44%;
-    --warning-foreground: 38 92% 28%;
-
-    --border: 214 20% 86%;
-    --input: 214 20% 86%;
-    --ring: 142 71% 36%;
+    --border: 214 28% 88%;
+    --input: 214 28% 88%;
+    --ring: 221 83% 53%;
 
     --radius: 0.75rem;
   }
 
   .dark {
-    /* 深色工作台：底色沉稳，翡翠绿只留给主操作与当前状态 */
+    /* 夜间暗黑模式：中性深岩灰 + 电光蓝主色 */
     --background: 222 47% 6%;
     --foreground: 210 40% 98%;
 
@@ -56,7 +53,7 @@
     --popover: 222 38% 10%;
     --popover-foreground: 210 40% 98%;
 
-    --primary: 142 71% 45%;
+    --primary: 217 91% 60%;
     --primary-foreground: 222 47% 6%;
 
     --secondary: 217 33% 15%;
@@ -67,18 +64,15 @@
 
     --muted-bg: 217 33% 14%;
 
-    --accent: 142 76% 48%;
-    --accent-foreground: 220 20% 6%;
+    --accent: 217 91% 60%;
+    --accent-foreground: 222 47% 6%;
 
     --destructive: 0 84% 60%;
     --destructive-foreground: 210 40% 98%;
 
-    --warning: 45 93% 47%;
-    --warning-foreground: 45 93% 65%;
-
     --border: 215 24% 19%;
     --input: 217 33% 16%;
-    --ring: 142 71% 45%;
+    --ring: 217 91% 60%;
   }
 }
 
@@ -98,30 +92,31 @@
   }
 }
 
-/* 微妙的工程网格背景 */
+/* 顶部柔和光晕（浅色干净留白，深色保留微弱层次） */
 .bg-studio-grid {
-  background-image:
-    radial-gradient(ellipse 80% 50% at 50% -10%, hsla(142, 71%, 45%, 0.12), transparent 70%),
-    linear-gradient(to right, hsla(215, 25%, 50%, 0.08) 1px, transparent 1px),
-    linear-gradient(to bottom, hsla(215, 25%, 50%, 0.08) 1px, transparent 1px);
-  background-size: 100% 100%, 40px 40px, 40px 40px;
+  background-image: radial-gradient(
+    ellipse 85% 55% at 50% -15%,
+    hsla(221, 83%, 53%, 0.1),
+    transparent 70%
+  );
 }
 
 .dark .bg-studio-grid {
-  background-image:
-    radial-gradient(ellipse 80% 50% at 50% -10%, hsla(142, 71%, 45%, 0.14), transparent 70%),
-    linear-gradient(to right, hsla(215, 25%, 24%, 0.16) 1px, transparent 1px),
-    linear-gradient(to bottom, hsla(215, 25%, 24%, 0.16) 1px, transparent 1px);
+  background-image: radial-gradient(
+    ellipse 85% 55% at 50% -15%,
+    hsla(217, 91%, 60%, 0.16),
+    transparent 70%
+  );
 }
 
-/* 渐变文字 */
+/* 渐变文字：深海蓝到靛蓝 */
 .gradient-text {
   @apply bg-clip-text text-transparent;
-  background-image: linear-gradient(135deg, hsl(142, 76%, 42%) 0%, hsl(168, 75%, 38%) 100%);
+  background-image: linear-gradient(135deg, hsl(221, 83%, 48%) 0%, hsl(243, 75%, 56%) 100%);
 }
 
 .dark .gradient-text {
-  background-image: linear-gradient(135deg, hsl(142, 76%, 58%) 0%, hsl(168, 75%, 52%) 100%);
+  background-image: linear-gradient(135deg, hsl(217, 91%, 65%) 0%, hsl(238, 88%, 72%) 100%);
 }
 
 @media (prefers-reduced-motion: reduce) {

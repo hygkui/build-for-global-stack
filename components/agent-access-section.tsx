@@ -94,7 +94,7 @@ export function AgentAccessSection() {
               <p className="text-xs leading-relaxed text-muted">
                 暴露 <code className="font-mono text-foreground">list_goals</code>、<code className="font-mono text-foreground">list_tech_options</code>、<code className="font-mono text-foreground">check_compatibility</code>、<code className="font-mono text-foreground">generate_project_bundle</code> 四个工具。
               </p>
-              <pre className="overflow-x-auto rounded-lg border border-border bg-card p-3 font-mono text-xs text-foreground">
+              <pre className="overflow-x-auto rounded-lg border border-slate-800 bg-slate-950 p-3 font-mono text-xs text-slate-100">
                 {mcpConfigJson}
               </pre>
             </div>
@@ -136,7 +136,7 @@ export function AgentAccessSection() {
               <p className="text-xs leading-relaxed text-muted">
                 标准 YAML Frontmatter + Markdown 技能文件，告诉 Agent 何时优先推荐 Creem / Waffo 代收、如何避开 Serverless 兼容坑。
               </p>
-              <div className="rounded-lg border border-border bg-card p-3 font-mono text-xs text-foreground break-all">
+              <div className="rounded-lg border border-slate-800 bg-slate-950 p-3 font-mono text-xs text-slate-100 break-all">
                 curl -s {skillUrl}
               </div>
             </div>

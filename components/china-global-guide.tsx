@@ -104,7 +104,7 @@ export function ChinaGlobalGuide() {
                   href={row.doc}
                   target="_blank"
                   rel="noreferrer"
-                  className="inline-flex items-center gap-1 text-base font-bold text-foreground hover:text-primary"
+                  className="inline-flex items-center gap-1 text-base font-bold text-foreground hover:text-emerald-600 dark:text-emerald-400"
                 >
                   {row.name}
                   <ArrowUpRight className="h-3.5 w-3.5 text-muted" />
@@ -113,7 +113,7 @@ export function ChinaGlobalGuide() {
               </div>
               <div className="flex items-center gap-1.5 text-xs">
                 {row.status === "recommended" ? (
-                  <CheckCircle2 className="h-4 w-4 shrink-0 text-primary" />
+                  <CheckCircle2 className="h-4 w-4 shrink-0 text-emerald-600 dark:text-emerald-400" />
                 ) : (
                   <AlertCircle
                     className={`h-4 w-4 shrink-0 ${
@@ -152,7 +152,7 @@ export function ChinaGlobalGuide() {
                         href={row.doc}
                         target="_blank"
                         rel="noreferrer"
-                        className="inline-flex items-center gap-1 hover:text-primary"
+                        className="inline-flex items-center gap-1 hover:text-emerald-600 dark:text-emerald-400"
                       >
                         {row.name}
                         <ArrowUpRight className="h-3.5 w-3.5 text-muted" />
@@ -162,7 +162,7 @@ export function ChinaGlobalGuide() {
                     <td className="px-4 py-3.5">
                       <span className="inline-flex items-center gap-1.5">
                         {row.status === "recommended" ? (
-                          <CheckCircle2 className="h-4 w-4 shrink-0 text-primary" />
+                          <CheckCircle2 className="h-4 w-4 shrink-0 text-emerald-600 dark:text-emerald-400" />
                         ) : (
                           <AlertCircle
                             className={`h-4 w-4 shrink-0 ${
@@ -196,7 +196,7 @@ export function ChinaGlobalGuide() {
         <div className="flex flex-col gap-2 md:flex-row md:items-end md:justify-between">
           <div>
             <div className="inline-flex items-center gap-1.5 rounded-full border border-border bg-secondary/50 px-3 py-1 text-xs font-medium text-foreground">
-              <Server className="h-3.5 w-3.5 text-primary" />
+              <Server className="h-3.5 w-3.5 text-emerald-600 dark:text-emerald-400" />
               月度起步成本预估
             </div>
             <h2 className="mt-3 text-2xl font-bold tracking-tight text-foreground md:text-3xl">
@@ -215,7 +215,7 @@ export function ChinaGlobalGuide() {
               className="flex flex-col rounded-xl border border-border bg-card/70 p-5 transition-colors hover:border-primary/40"
             >
               <div className="flex items-start justify-between gap-2">
-                <span className="rounded-md bg-primary/10 px-2.5 py-1 text-xs font-medium text-primary">
+                <span className="rounded-md bg-primary/10 px-2.5 py-1 text-xs font-medium text-emerald-600 dark:text-emerald-400">
                   {tier.highlight}
                 </span>
                 <span className="font-mono text-lg font-bold text-foreground">{tier.cost}</span>
@@ -224,7 +224,7 @@ export function ChinaGlobalGuide() {
               <ul className="mt-4 space-y-2.5 text-sm text-muted">
                 {tier.items.map((item) => (
                   <li key={item} className="flex items-start gap-2">
-                    <CheckCircle2 className="mt-0.5 h-4 w-4 shrink-0 text-primary/80" />
+                    <CheckCircle2 className="mt-0.5 h-4 w-4 shrink-0 text-emerald-600 dark:text-emerald-400/80" />
                     <span>{item}</span>
                   </li>
                 ))}
