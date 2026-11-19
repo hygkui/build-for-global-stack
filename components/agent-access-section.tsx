@@ -80,7 +80,7 @@ export function AgentAccessSection() {
 
         <div className="mt-6 grid gap-6 lg:grid-cols-2">
           {/* MCP 接入卡片 */}
-          <div className="flex flex-col justify-between rounded-xl border border-border bg-background/60 p-5 space-y-4">
+          <div className="min-w-0 flex flex-col justify-between rounded-xl border border-border bg-background/60 p-4 space-y-4 sm:p-5">
             <div className="space-y-2">
               <div className="flex items-center justify-between gap-2">
                 <span className="inline-flex items-center gap-1.5 text-sm font-bold text-foreground">
@@ -122,7 +122,7 @@ export function AgentAccessSection() {
           </div>
 
           {/* Skill 接入卡片 */}
-          <div className="flex flex-col justify-between rounded-xl border border-border bg-background/60 p-5 space-y-4">
+          <div className="min-w-0 flex flex-col justify-between rounded-xl border border-border bg-background/60 p-4 space-y-4 sm:p-5">
             <div className="space-y-2">
               <div className="flex items-center justify-between gap-2">
                 <span className="inline-flex items-center gap-1.5 text-sm font-bold text-foreground">

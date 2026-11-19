@@ -320,7 +320,7 @@ export function GeneratorSection() {
 
       <div className="grid gap-6 lg:grid-cols-12">
         {/* 主工作区 */}
-        <div className="flex min-h-[34rem] flex-col rounded-2xl border border-border bg-card/50 shadow-xl shadow-black/5 backdrop-blur-sm dark:shadow-black/20 lg:col-span-8">
+        <div className="min-w-0 flex min-h-[34rem] flex-col rounded-2xl border border-border bg-card/50 shadow-xl shadow-black/5 backdrop-blur-sm dark:shadow-black/20 lg:col-span-8">
           <nav aria-label="步骤" className="border-b border-border px-3 py-3 sm:px-6 sm:py-4">
             <ol className="flex items-center gap-1.5 sm:gap-2">
               {STEPS.map((item, index) => {
@@ -589,7 +589,7 @@ export function GeneratorSection() {
         </div>
 
         {/* 右侧实时配置摘要栏 */}
-        <aside className="space-y-4 lg:col-span-4">
+        <aside className="min-w-0 space-y-4 lg:col-span-4">
           <div className="sticky top-24 rounded-2xl border border-border bg-card/70 p-5 space-y-5">
             <div className="flex items-center justify-between">
               <h3 className="text-sm font-bold text-foreground">当前方案摘要</h3>

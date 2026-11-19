@@ -398,7 +398,7 @@ export function PromptGenerator({ selected, projectContext }: PromptGeneratorPro
             </span>
           </div>
           <div className="grid overflow-hidden rounded-xl border border-border bg-card md:grid-cols-12">
-            <div className="border-b border-border bg-secondary/20 p-2 md:col-span-4 md:border-b-0 md:border-r">
+            <div className="min-w-0 border-b border-border bg-secondary/20 p-2 md:col-span-4 md:border-b-0 md:border-r">
               <p className="px-2 py-1.5 text-[11px] font-medium uppercase tracking-wider text-muted">
                 生成文件列表
               </p>
@@ -422,7 +422,7 @@ export function PromptGenerator({ selected, projectContext }: PromptGeneratorPro
                 ))}
               </ul>
             </div>
-            <div className="md:col-span-8">
+            <div className="min-w-0 md:col-span-8">
               <div className="flex items-center justify-between border-b border-border px-4 py-2">
                 <span className="font-mono text-xs text-foreground truncate">{activePreviewFile}</span>
                 <button
